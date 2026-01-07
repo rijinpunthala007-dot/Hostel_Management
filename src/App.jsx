@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import StudentDashboard from './pages/StudentDashboard';
 import RoomSelection from './pages/RoomSelection';
@@ -15,7 +15,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
     return (
-        <BrowserRouter>
+        <HashRouter>
             <ErrorBoundary>
                 <Routes>
                     <Route path="/" element={<Login />} />
@@ -31,7 +31,7 @@ function App() {
                     <Route path="*" element={<Login />} />
                 </Routes>
             </ErrorBoundary>
-        </BrowserRouter>
+        </HashRouter>
     );
 }
 
