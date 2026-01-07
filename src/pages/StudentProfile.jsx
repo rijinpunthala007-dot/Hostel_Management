@@ -37,10 +37,7 @@ const StudentProfile = () => {
                         <div className="mb-8">
                             <h2 className="text-2xl font-bold text-gray-900">{userData.name}</h2>
                             <p className="text-gray-500 font-medium">{userData.course}</p>
-                            <div className="flex items-center gap-2 mt-2 text-sm text-gray-500 bg-gray-50 inline-flex px-3 py-1 rounded-full border border-gray-200">
-                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                Active Student
-                            </div>
+
                         </div>
 
                         {/* Details Grid */}
