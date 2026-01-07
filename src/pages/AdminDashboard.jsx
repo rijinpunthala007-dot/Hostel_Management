@@ -518,9 +518,9 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
 
     return (
         <div className="animate-fade-in">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Manage Students</h2>
-                <button onClick={onAdd} className="bg-[#991B1B] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-red-800 transition-colors">
+                <button onClick={onAdd} className="w-full md:w-auto bg-[#991B1B] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium hover:bg-red-800 transition-colors shadow-sm">
                     <Plus size={18} /> Add Student
                 </button>
             </div>
@@ -548,7 +548,52 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
                         ))}
                     </select>
                 </div>
-                <div className="overflow-x-auto">
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-gray-100">
+                    {filteredStudents.length > 0 ? (
+                        filteredStudents.map(student => (
+                            <div key={student.id} className="p-4 flex flex-col gap-3 bg-white">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900">{student.name}</h3>
+                                        <p className="text-sm text-gray-500 font-mono">{student.regNo}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => onEdit(student)} className="p-2 text-blue-600 bg-blue-50 rounded-full" title="Edit"><Edit size={16} /></button>
+                                        <button onClick={() => onDelete(student.id)} className="p-2 text-red-600 bg-red-50 rounded-full" title="Delete"><Trash2 size={16} /></button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-y-2 text-sm">
+                                    <div className="text-gray-500">Hostel:</div>
+                                    <div className="text-gray-900 font-medium">{student.hostel}</div>
+
+                                    <div className="text-gray-500">Room:</div>
+                                    <div className="text-gray-900 font-medium">{student.room}</div>
+
+                                    <div className="text-gray-500">Fee Status:</div>
+                                    <div>
+                                        {student.feeDue > 0 ? (
+                                            <span className="inline-block bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-medium">
+                                                Due: ₹{student.feeDue}
+                                            </span>
+                                        ) : (
+                                            <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
+                                                Paid
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-8 text-center text-gray-500">
+                            No students found matching your criteria.
+                        </div>
+                    )}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left text-sm text-gray-600">
                         <thead className="bg-gray-50 text-gray-900 font-medium">
                             <tr>
