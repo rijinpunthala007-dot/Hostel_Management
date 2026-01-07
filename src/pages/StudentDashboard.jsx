@@ -1,10 +1,25 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogOut, Home, User, Wallet, BedDouble, Utensils, AlertCircle, Coffee, CalendarCheck, FilePlus, Bell, FileText } from 'lucide-react';
-import { userData, announcements } from '../mockData';
+import { userData, announcements, hostels } from '../mockData';
+import { X, BedDouble } from 'lucide-react'; // Added X and BedDouble for modal
 
 const StudentDashboard = () => {
     const navigate = useNavigate();
+    const [showHostelModal, setShowHostelModal] = React.useState(false);
+    const [selectedHostel, setSelectedHostel] = React.useState(null);
+
+    const handleRoomCardClick = () => {
+        if (userData.hostelName) {
+            const hostel = hostels.find(h => h.name === userData.hostelName);
+            if (hostel) {
+                setSelectedHostel(hostel);
+                setShowHostelModal(true);
+            }
+        } else {
+            navigate('/hostels');
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#F3F4F6] font-sans">
@@ -51,24 +66,50 @@ const StudentDashboard = () => {
                         </Link>
                     </div>
 
-                    {/* Application Status Card */}
+                    {/* Application/Allocation Status Card */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="bg-blue-50 p-2 rounded-full">
-                                <Home className="text-blue-600" size={24} />
-                            </div>
-                            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium">
-                                Not Applied
-                            </span>
-                        </div>
-                        <h3 className="font-semibold text-lg text-gray-900 mb-2">Room Application</h3>
-                        <p className="text-sm text-gray-500 mb-4">Apply for the upcoming academic year.</p>
-                        <Link
-                            to="/hostels"
-                            className="w-full border border-green-600 text-green-600 py-2 rounded-lg hover:bg-green-50 font-medium transition-colors block text-center"
-                        >
-                            Apply for Room
-                        </Link>
+                        {userData.hostelName ? (
+                            <>
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="bg-green-50 p-2 rounded-full">
+                                        <Home className="text-green-600" size={24} />
+                                    </div>
+                                    <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
+                                        Allocated
+                                    </span>
+                                </div>
+                                <h3 className="font-semibold text-lg text-gray-900 mb-2">Hostel Allocated</h3>
+                                <div className="mb-4">
+                                    <p className="text-sm font-medium text-gray-900">{userData.hostelName}</p>
+                                    <p className="text-sm text-gray-500">Room: {userData.roomNumber}</p>
+                                </div>
+                                <button
+                                    onClick={handleRoomCardClick}
+                                    className="w-full border border-green-600 text-green-600 py-2 rounded-lg hover:bg-green-50 font-medium transition-colors block text-center"
+                                >
+                                    View Hostel Details
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="bg-blue-50 p-2 rounded-full">
+                                        <Home className="text-blue-600" size={24} />
+                                    </div>
+                                    <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium">
+                                        Not Applied
+                                    </span>
+                                </div>
+                                <h3 className="font-semibold text-lg text-gray-900 mb-2">Room Application</h3>
+                                <p className="text-sm text-gray-500 mb-4">Apply for the upcoming academic year.</p>
+                                <button
+                                    onClick={handleRoomCardClick}
+                                    className="w-full border border-green-600 text-green-600 py-2 rounded-lg hover:bg-green-50 font-medium transition-colors block text-center"
+                                >
+                                    Apply for Room
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     {/* Fee Status Card */}
@@ -174,6 +215,59 @@ const StudentDashboard = () => {
                     </div>
                 </div>
             </div>
+            {/* Hostel Details Modal */}
+            {showHostelModal && selectedHostel && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
+                        <div className="relative h-48 bg-gray-200">
+                            {selectedHostel.image ? (
+                                <img src={selectedHostel.image} alt={selectedHostel.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                                    <BedDouble size={48} />
+                                    <span className="text-sm mt-2">No Image</span>
+                                </div>
+                            )}
+                            <button
+                                onClick={() => setShowHostelModal(false)}
+                                className="absolute top-4 right-4 bg-white/90 p-1 rounded-full text-gray-600 hover:text-gray-900 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedHostel.name}</h3>
+                            <div className="flex gap-2 mb-4">
+                                <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium">{selectedHostel.type} Hostel</span>
+                                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium">Room {userData.roomNumber}</span>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                                {selectedHostel.description}
+                            </p>
+
+                            {selectedHostel.facilities && selectedHostel.facilities.length > 0 && (
+                                <div className="mb-6">
+                                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Facilities</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedHostel.facilities.map((fac, i) => (
+                                            <span key={i} className="px-3 py-1 bg-gray-50 text-gray-600 rounded-full text-xs border border-gray-100">{fac}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="pt-4 border-t border-gray-100 flex justify-end">
+                                <button
+                                    onClick={() => setShowHostelModal(false)}
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
