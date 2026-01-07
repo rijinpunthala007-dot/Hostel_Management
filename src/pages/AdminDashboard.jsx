@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu } from 'lucide-react';
 import { allStudents, complaints, hostels, announcements as initialAnnouncements, menuData } from '../mockData';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('dashboard');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // State for interactive features
     const [students, setStudents] = useState(allStudents);
@@ -166,9 +167,49 @@ const AdminDashboard = () => {
 
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 p-4 z-20 flex justify-between items-center">
-                <span className="font-bold text-[#991B1B]">Admin Panel</span>
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600">
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                    <span className="font-bold text-[#991B1B]">Admin Panel</span>
+                </div>
                 <button onClick={() => navigate('/')}><LogOut size={20} /></button>
             </div>
+
+            {/* Mobile Menu Drawer */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden fixed inset-0 z-10 bg-black/50" onClick={() => setIsMobileMenuOpen(false)}>
+                    <div className="bg-white w-64 h-full shadow-lg pt-20 px-4" onClick={e => e.stopPropagation()}>
+                        <nav className="space-y-1">
+                            {menuItems.map((item) => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => {
+                                        setActiveTab(item.id);
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${activeTab === item.id
+                                        ? 'bg-red-50 text-[#991B1B]'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        }`}
+                                >
+                                    <item.icon size={20} />
+                                    {item.label}
+                                </button>
+                            ))}
+                        </nav>
+                        <div className="mt-8 pt-4 border-t border-gray-100">
+                            <button
+                                onClick={() => navigate('/')}
+                                className="w-full flex items-center gap-2 text-gray-600 hover:text-[#991B1B] px-4 py-2 text-sm font-medium transition-colors"
+                            >
+                                <LogOut size={18} />
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Main Content */}
             <main className="flex-1 ml-0 md:ml-64 p-8 pt-20 md:pt-8 bg-[#F3F4F6] min-h-screen">
@@ -177,8 +218,8 @@ const AdminDashboard = () => {
 
             {/* Simulated Modals */}
             {showStudentModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-                    <div className="bg-white p-6 rounded-lg w-[600px] shadow-xl max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
+                    <div className="bg-white p-6 rounded-lg w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900">{editingStudent ? `Edit Student: ${editingStudent.name}` : 'Add New Student'}</h3>
                             <button onClick={() => setShowStudentModal(false)} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
@@ -309,8 +350,8 @@ const AdminDashboard = () => {
             )}
 
             {showHostelModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-                    <div className="bg-white p-6 rounded-lg w-[500px] shadow-xl max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
+                    <div className="bg-white p-6 rounded-lg w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900">{editingHostel ? 'Edit Hostel' : 'Add New Hostel'}</h3>
                             <button onClick={() => setShowHostelModal(false)} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
@@ -383,8 +424,8 @@ const AdminDashboard = () => {
             )}
 
             {showNoticeModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-                    <div className="bg-white p-6 rounded-lg w-96 shadow-xl">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
+                    <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold">Post New Notice</h3>
                             <button onClick={() => setShowNoticeModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
@@ -485,7 +526,7 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-4 border-b border-gray-100 flex gap-4">
+                <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
@@ -507,52 +548,54 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
                         ))}
                     </select>
                 </div>
-                <table className="w-full text-left text-sm text-gray-600">
-                    <thead className="bg-gray-50 text-gray-900 font-medium">
-                        <tr>
-                            <th className="px-6 py-3">Name</th>
-                            <th className="px-6 py-3">Reg. No</th>
-                            <th className="px-6 py-3">Hostel</th>
-                            <th className="px-6 py-3">Room</th>
-                            <th className="px-6 py-3">Fee Status</th>
-                            <th className="px-6 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {filteredStudents.length > 0 ? (
-                            filteredStudents.map(student => (
-                                <tr key={student.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-gray-900">{student.name}</td>
-                                    <td className="px-6 py-4 font-mono">{student.regNo}</td>
-                                    <td className="px-6 py-4">{student.hostel}</td>
-                                    <td className="px-6 py-4">{student.room}</td>
-                                    <td className="px-6 py-4">
-                                        {student.feeDue > 0 ? (
-                                            <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-medium">
-                                                Due: ₹{student.feeDue}
-                                            </span>
-                                        ) : (
-                                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">
-                                                Paid
-                                            </span>
-                                        )}
-                                    </td>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-600">
+                        <thead className="bg-gray-50 text-gray-900 font-medium">
+                            <tr>
+                                <th className="px-6 py-3 whitespace-nowrap">Name</th>
+                                <th className="px-6 py-3 whitespace-nowrap">Reg. No</th>
+                                <th className="px-6 py-3 whitespace-nowrap">Hostel</th>
+                                <th className="px-6 py-3 whitespace-nowrap">Room</th>
+                                <th className="px-6 py-3 whitespace-nowrap">Fee Status</th>
+                                <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {filteredStudents.length > 0 ? (
+                                filteredStudents.map(student => (
+                                    <tr key={student.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{student.name}</td>
+                                        <td className="px-6 py-4 font-mono whitespace-nowrap">{student.regNo}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{student.hostel}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{student.room}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {student.feeDue > 0 ? (
+                                                <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-medium">
+                                                    Due: ₹{student.feeDue}
+                                                </span>
+                                            ) : (
+                                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">
+                                                    Paid
+                                                </span>
+                                            )}
+                                        </td>
 
-                                    <td className="px-6 py-4 text-right flex justify-end gap-2">
-                                        <button onClick={() => onEdit(student)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit"><Edit size={16} /></button>
-                                        <button onClick={() => onDelete(student.id)} className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
+                                        <td className="px-6 py-4 text-right flex justify-end gap-2 whitespace-nowrap">
+                                            <button onClick={() => onEdit(student)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit"><Edit size={16} /></button>
+                                            <button onClick={() => onDelete(student.id)} className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                                        No students found matching your criteria.
                                     </td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colspan="6" className="px-6 py-8 text-center text-gray-500">
-                                    No students found matching your criteria.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
