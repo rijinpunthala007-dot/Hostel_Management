@@ -3,9 +3,7 @@ export const userData = {
     regNo: "Reg No.",
     course: "Course Name",
     attendance: "0%",
-    feeDue: "₹0",
-    hostelName: "St Thomas Hostel",
-    roomNumber: "101"
+    feeDue: "₹0"
 };
 
 export const menuData = {
