@@ -24,8 +24,8 @@ const HostelSelection = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {hostels.map((hostel) => (
-                        <div key={hostel.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
-                            <div className="h-48 bg-gray-200 flex items-center justify-center relative overflow-hidden">
+                        <div key={hostel.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group flex flex-col h-full">
+                            <div className="h-48 bg-gray-200 flex items-center justify-center relative overflow-hidden flex-shrink-0">
                                 {hostel.image ? (
                                     <img
                                         src={hostel.image}
@@ -40,13 +40,13 @@ const HostelSelection = () => {
                                 )}
                                 <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition-colors pointer-events-none" />
                             </div>
-                            <div className="p-6">
+                            <div className="p-6 flex flex-col flex-grow">
                                 <h2 className="text-xl font-bold text-gray-900 mb-2">{hostel.name}</h2>
-                                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                                <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">
                                     {hostel.description}
                                 </p>
 
-                                <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
+                                <div className="flex justify-between items-center text-sm text-gray-500 mb-6 mt-auto">
                                     <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded">
                                         {hostel.totalRooms} Total Rooms
                                     </span>
@@ -57,7 +57,7 @@ const HostelSelection = () => {
 
                                 <Link
                                     to={`/room-selection?hostelId=${hostel.id}`}
-                                    className="w-full flex items-center justify-center gap-2 bg-[#991B1B] text-white py-3 rounded-lg font-medium hover:bg-red-800 transition-colors group-hover:shadow-md"
+                                    className="w-full flex items-center justify-center gap-2 bg-[#991B1B] text-white py-3 rounded-lg font-medium hover:bg-red-800 transition-colors group-hover:shadow-md mt-auto"
                                 >
                                     View Rooms
                                     <ArrowRight size={18} />
