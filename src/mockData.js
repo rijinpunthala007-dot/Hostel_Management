@@ -3,7 +3,10 @@ export const userData = {
     regNo: "Reg No.",
     course: "Course Name",
     attendance: "0%",
-    feeDue: "₹0"
+    feeDue: "₹0",
+    hostelName: "St Thomas Hostel",
+    roomNumber: "101",
+    roomType: "2 Sharing"
 };
 
 export const menuData = {
@@ -102,3 +105,4 @@ export const allStudents = [
 ];
 
 export const complaints = [];
+export const hostelChangeRequests = [];

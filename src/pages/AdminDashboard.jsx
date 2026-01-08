@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu } from 'lucide-react';
+import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu, ArrowRightLeft } from 'lucide-react';
 import { allStudents, complaints, hostels, announcements as initialAnnouncements, menuData } from '../mockData';
 
 const AdminDashboard = () => {
@@ -15,6 +15,45 @@ const AdminDashboard = () => {
     const [complaintList, setComplaintList] = useState(complaints);
     const [menu, setMenu] = useState(menuData);
     const [leaveRequests, setLeaveRequests] = useState([]);
+    const [changeRequests, setChangeRequests] = useState([]);
+
+    // Load change requests
+    React.useEffect(() => {
+        const saved = localStorage.getItem('hostelChangeRequests');
+        if (saved) {
+            setChangeRequests(JSON.parse(saved));
+        }
+    }, []);
+
+    const handleChangeRequestAction = (id, action) => {
+        const updatedRequests = changeRequests.map(req => {
+            if (req.id === id) {
+                return { ...req, status: action };
+            }
+            return req;
+        });
+
+        if (action === 'Approved') {
+            // Find request details
+            const request = changeRequests.find(r => r.id === id);
+            // Update User Data in Local Storage (simulating DB update for the logged in user)
+            const storedUser = localStorage.getItem('userData');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                // Only update if this request matches the logged in user (mock logic)
+                // In a real app, we would update the specific student record in DB
+                if (user.name === request.studentName || true) { // Simulating for current user
+                    user.hostelName = request.requestedHostel;
+                    user.roomNumber = "Allocated"; // Reset room
+                    user.roomType = "Pending"; // Reset type
+                    localStorage.setItem('userData', JSON.stringify(user));
+                }
+            }
+        }
+
+        setChangeRequests(updatedRequests);
+        localStorage.setItem('hostelChangeRequests', JSON.stringify(updatedRequests));
+    };
 
     // Load leave requests from localStorage
     React.useEffect(() => {
@@ -103,6 +142,7 @@ const AdminDashboard = () => {
         { id: 'food', label: 'Food Menu', icon: Utensils },
         { id: 'complaints', label: 'Complaints', icon: AlertCircle },
         { id: 'leaves', label: 'Leave Requests', icon: Calendar },
+        { id: 'transfers', label: 'Hostel Transfers', icon: ArrowRightLeft },
         { id: 'notices', label: 'Notice Board', icon: Bell },
     ];
 
@@ -120,6 +160,8 @@ const AdminDashboard = () => {
                 return <FoodMenuManage menu={menu} setMenu={setMenu} onSave={handleSaveMenu} />;
             case 'leaves':
                 return <LeaveManage requests={leaveRequests} onAction={handleLeaveAction} />;
+            case 'transfers':
+                return <TransferRequestList requests={changeRequests} onAction={handleChangeRequestAction} />;
             case 'notices':
                 return <NoticeBoardManage notices={noticeList} onDelete={handleDeleteNotice} onAdd={() => setShowNoticeModal(true)} />;
             default:
@@ -801,54 +843,106 @@ const LeaveManage = ({ requests, onAction }) => (
                 No leave requests found.
             </div>
         ) : (
-            <div className="grid gap-4">
-                {requests.map((request) => (
-                    <div key={request.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="space-y-4">
+                {requests.map(req => (
+                    <div key={req.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${request.type === 'Medical' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                                    }`}>
-                                    {request.type}
-                                </span>
-                                <span className="text-xs text-gray-400 font-medium">
-                                    {request.from} - {request.to}
-                                </span>
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${req.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                    req.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                        'bg-orange-100 text-orange-700'
+                                    }`}>{req.status}</span>
+                                <span className="text-sm text-gray-500">{req.date}</span>
                             </div>
-                            <h3 className="font-bold text-gray-900 text-lg">
-                                {request.studentName} <span className="text-sm font-normal text-gray-500">({request.regNo})</span>
-                            </h3>
-                            <p className="text-gray-600 mt-1">{request.reason}</p>
+                            <h3 className="font-bold text-gray-900">{req.type} Application</h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                                <span className="font-medium">{req.studentName}</span> ({req.regNo})
+                            </p>
+                            <p className="text-sm text-gray-500 mt-2">
+                                Date: {req.fromDate} to {req.toDate}
+                            </p>
+                            <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded">
+                                Reason: {req.reason}
+                            </p>
                         </div>
 
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            {request.status === 'Pending' ? (
-                                <>
-                                    <button
-                                        onClick={() => onAction(request.id, 'Approved')}
-                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
-                                    >
-                                        <CheckCircle size={16} /> Approve
-                                    </button>
-                                    <button
-                                        onClick={() => onAction(request.id, 'Rejected')}
-                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium text-sm"
-                                    >
-                                        <XCircle size={16} /> Reject
-                                    </button>
-                                </>
-                            ) : (
-                                <span className={`px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1.5 ${request.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                    }`}>
-                                    {request.status === 'Approved' ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                                    {request.status}
-                                </span>
-                            )}
-                        </div>
+                        {req.status === 'Pending' && (
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => onAction(req.id, 'Approved')}
+                                    className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                                >
+                                    Approve
+                                </button>
+                                <button
+                                    onClick={() => onAction(req.id, 'Rejected')}
+                                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                                >
+                                    Reject
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
         )}
     </div>
 );
+
+const TransferRequestList = ({ requests, onAction }) => (
+    <div className="animate-fade-in">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Hostel Transfer Requests</h2>
+        {requests.length === 0 ? (
+            <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
+                No transfer requests found.
+            </div>
+        ) : (
+            <div className="space-y-4">
+                {requests.map(req => (
+                    <div key={req.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${req.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                    req.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                        'bg-orange-100 text-orange-700'
+                                    }`}>{req.status}</span>
+                                <span className="text-sm text-gray-500">{req.date}</span>
+                            </div>
+                            <h3 className="font-bold text-gray-900 mb-1">Request for {req.requestedHostel}</h3>
+                            <p className="text-sm text-gray-600">
+                                From: <span className="font-medium text-gray-800">{req.currentHostel}</span>
+                            </p>
+                            <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+                                <Users size={16} />
+                                <span>{req.studentName} ({req.regNo})</span>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded border border-gray-100 italic">
+                                "{req.reason}"
+                            </p>
+                        </div>
+
+                        {req.status === 'Pending' && (
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => onAction(req.id, 'Approved')}
+                                    className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+                                >
+                                    <CheckCircle size={16} /> Approve
+                                </button>
+                                <button
+                                    onClick={() => onAction(req.id, 'Rejected')}
+                                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
+                                >
+                                    <XCircle size={16} /> Reject
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+);
+
 
 export default AdminDashboard;

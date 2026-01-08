@@ -5,6 +5,14 @@ import { userData, announcements } from '../mockData';
 
 const StudentDashboard = () => {
     const navigate = useNavigate();
+    const [user, setUser] = React.useState(userData);
+
+    React.useEffect(() => {
+        const storedUser = localStorage.getItem('userData');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+    }, []);
 
     return (
         <div className="min-h-screen bg-[#F3F4F6] font-sans">
@@ -27,7 +35,7 @@ const StudentDashboard = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-gray-900">
-                        Welcome back, {userData.name}!
+                        Welcome back, {user.name}!
                     </h1>
                     <p className="text-gray-600 mt-1">
                         Here's your hostel dashboard overview.
@@ -43,31 +51,42 @@ const StudentDashboard = () => {
                                 <User className="text-[#991B1B]" size={24} />
                             </div>
                         </div>
-                        <h3 className="font-semibold text-lg text-gray-900">{userData.name}</h3>
-                        <p className="text-sm text-gray-500">{userData.course}</p>
-                        <p className="text-sm text-gray-500 font-mono mt-1">{userData.regNo}</p>
+                        <h3 className="font-semibold text-lg text-gray-900">{user.name}</h3>
+                        <p className="text-sm text-gray-500">{user.course}</p>
+                        <p className="text-sm text-gray-500 font-mono mt-1">{user.regNo}</p>
                         <Link to="/profile" className="text-[#991B1B] text-sm font-medium mt-4 inline-block hover:underline">
                             View Full Profile
                         </Link>
                     </div>
 
-                    {/* Application Status Card */}
+                    {/* Hostel Allocation Card */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-start justify-between mb-4">
                             <div className="bg-blue-50 p-2 rounded-full">
                                 <Home className="text-blue-600" size={24} />
                             </div>
-                            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium">
-                                Not Applied
+                            <span className="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full font-medium">
+                                Allocated
                             </span>
                         </div>
-                        <h3 className="font-semibold text-lg text-gray-900 mb-2">Room Application</h3>
-                        <p className="text-sm text-gray-500 mb-4">Apply for the upcoming academic year.</p>
+                        <h3 className="font-semibold text-lg text-gray-900 mb-1">Hostel Allocated</h3>
+                        <h4 className="font-bold text-md text-[#991B1B] mb-2">{user.hostelName}</h4>
+                        <div className="space-y-1 mb-4">
+                            <p className="text-sm text-gray-600 flex justify-between">
+                                <span>Room No:</span>
+                                <span className="font-medium text-gray-900">{user.roomNumber}</span>
+                            </p>
+                            <p className="text-sm text-gray-600 flex justify-between">
+                                <span>Type:</span>
+                                <span className="font-medium text-gray-900">{user.roomType}</span>
+                            </p>
+                        </div>
+
                         <Link
                             to="/hostels"
-                            className="w-full border border-green-600 text-green-600 py-2 rounded-lg hover:bg-green-50 font-medium transition-colors block text-center"
+                            className="w-full border border-blue-600 text-blue-600 py-2 rounded-lg hover:bg-blue-50 font-medium transition-colors block text-center"
                         >
-                            Apply for Room
+                            Change Hostel
                         </Link>
                     </div>
 
@@ -78,7 +97,7 @@ const StudentDashboard = () => {
                                 <FileText className="text-green-600" size={24} />
                             </div>
                         </div>
-                        <h3 className="font-bold text-2xl text-gray-900">{userData.feeDue}</h3>
+                        <h3 className="font-bold text-2xl text-gray-900">{user.feeDue}</h3>
                         <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                             <span className="w-2 h-2 bg-green-500 rounded-full inline-block"></span>
                             No dues pending
