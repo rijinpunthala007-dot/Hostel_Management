@@ -15,7 +15,14 @@ const AdminDashboard = () => {
         const saved = localStorage.getItem('announcements');
         return saved ? JSON.parse(saved) : initialAnnouncements;
     });
-    const [complaintList, setComplaintList] = useState(complaints);
+    const [complaintList, setComplaintList] = useState(() => {
+        const saved = localStorage.getItem('complaintList');
+        return saved ? JSON.parse(saved) : complaints;
+    });
+
+    React.useEffect(() => {
+        localStorage.setItem('complaintList', JSON.stringify(complaintList));
+    }, [complaintList]);
     const [menu, setMenu] = useState(() => {
         const saved = localStorage.getItem('foodMenu');
         return saved ? JSON.parse(saved) : menuData;
@@ -828,7 +835,11 @@ const FoodMenuManage = ({ menu, setMenu, onSave }) => (
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1 uppercase">Items</label>
                             <textarea
-                                defaultValue={data.items}
+                                value={data.items}
+                                onChange={(e) => setMenu({
+                                    ...menu,
+                                    [meal]: { ...data, items: e.target.value }
+                                })}
                                 className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#991B1B] focus:border-red-500 outline-none transition-shadow"
                                 rows="3"
                             />

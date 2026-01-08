@@ -10,6 +10,11 @@ const LeaveApplication = () => {
     const [reason, setReason] = useState('');
 
     // Initialize from localStorage or mock data
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem('userData');
+        return saved ? JSON.parse(saved) : { name: 'Student Name', regNo: 'Reg No' };
+    });
+
     const [leaveHistory, setLeaveHistory] = useState(() => {
         const saved = localStorage.getItem('leaveRequests');
         return saved ? JSON.parse(saved) : [];
@@ -24,8 +29,8 @@ const LeaveApplication = () => {
             to: endDate,
             status: 'Pending',
             reason: reason,
-            studentName: 'Rahul Kumar', // Mocked user
-            regNo: 'CS2023001'
+            studentName: user.name,
+            regNo: user.regNo
         };
         const updatedHistory = [newLeave, ...leaveHistory];
         setLeaveHistory(updatedHistory);

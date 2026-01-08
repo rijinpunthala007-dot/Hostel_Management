@@ -7,19 +7,24 @@ const ComplaintSubmission = () => {
     const navigate = useNavigate();
     const [category, setCategory] = useState('Infrastructure');
     const [description, setDescription] = useState('');
-    const [myComplaints, setMyComplaints] = useState(complaints);
+    const [myComplaints, setMyComplaints] = useState(() => {
+        const saved = localStorage.getItem('complaintList');
+        return saved ? JSON.parse(saved) : complaints;
+    });
 
     const handleSubmit = (e) => {
         e.preventDefault();
         const newComplaint = {
-            id: myComplaints.length + 1,
-            student: "Rahul Kumar", // Mocked current user
+            id: Date.now(), // Use timestamp for unique ID
+            student: "Rahul Kumar", // Mocked current user - ideally get from userData
             type: category,
             desc: description,
             status: "Pending",
             date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
         };
-        setMyComplaints([newComplaint, ...myComplaints]);
+        const updatedList = [newComplaint, ...myComplaints];
+        setMyComplaints(updatedList);
+        localStorage.setItem('complaintList', JSON.stringify(updatedList));
         alert('Complaint submitted successfully!');
         setDescription('');
     };

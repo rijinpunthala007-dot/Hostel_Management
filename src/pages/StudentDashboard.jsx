@@ -1,24 +1,137 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, Home, User, Wallet, BedDouble, Utensils, AlertCircle, Coffee, CalendarCheck, FilePlus, Bell, FileText } from 'lucide-react';
+import { LogOut, Home, User, Wallet, BedDouble, Utensils, AlertCircle, Coffee, CalendarCheck, FilePlus, Bell, FileText, CheckCircle } from 'lucide-react';
 import { userData, announcements } from '../mockData';
 
 const StudentDashboard = () => {
     const navigate = useNavigate();
     const [user, setUser] = React.useState(userData);
     const [notices, setNotices] = React.useState(announcements);
+    const [rejectedRequest, setRejectedRequest] = React.useState(null);
+    const [approvedRequest, setApprovedRequest] = React.useState(null);
+    const [leaveNotification, setLeaveNotification] = React.useState(null);
 
     React.useEffect(() => {
         const storedUser = localStorage.getItem('userData');
+        let currentUser = user;
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            currentUser = JSON.parse(storedUser);
+            setUser(currentUser);
         }
 
         const storedNotices = localStorage.getItem('announcements');
         if (storedNotices) {
             setNotices(JSON.parse(storedNotices));
         }
+
+        const storedRequests = localStorage.getItem('hostelChangeRequests');
+        if (storedRequests) {
+            const requests = JSON.parse(storedRequests);
+            // Check for Rejections
+            const rejection = requests.find(r =>
+                (r.studentName === currentUser.name || r.regNo === currentUser.regNo) &&
+                r.status === 'Rejected'
+            );
+            if (rejection) {
+                setRejectedRequest(rejection);
+            }
+
+            // Check for Approvals (that haven't been seen/dismissed)
+            const approval = requests.find(r =>
+                (r.studentName === currentUser.name || r.regNo === currentUser.regNo) &&
+                r.status === 'Approved'
+            );
+            if (approval) {
+                setApprovedRequest(approval);
+
+                // Force reload user data from localStorage
+                const updatedStoredUser = localStorage.getItem('userData');
+                let newUser = user;
+                if (updatedStoredUser) {
+                    newUser = JSON.parse(updatedStoredUser);
+                }
+
+                // FAIL-SAFE: If the storage hasn't updated yet (or failed), overwrite with approval details
+                if (newUser.hostelName !== approval.requestedHostel) {
+                    newUser = {
+                        ...newUser,
+                        hostelName: approval.requestedHostel,
+                        roomNumber: "Allocated",
+                        roomType: "Pending"
+                    };
+                    // Optional: Self-correct localStorage
+                    localStorage.setItem('userData', JSON.stringify(newUser));
+                }
+
+                setUser(newUser);
+            }
+        }
+
+        const storedLeaves = localStorage.getItem('leaveRequests');
+        if (storedLeaves) {
+            const leaves = JSON.parse(storedLeaves);
+            const updatedLeave = leaves.find(l =>
+                (l.studentName === currentUser.name || l.regNo === currentUser.regNo) &&
+                (l.status === 'Approved' || l.status === 'Rejected')
+            );
+            if (updatedLeave) {
+                setLeaveNotification(updatedLeave);
+            }
+        }
     }, []);
+
+    const dismissNotification = (type) => {
+        const storedRequests = localStorage.getItem('hostelChangeRequests');
+        const storedLeaves = localStorage.getItem('leaveRequests');
+
+        let requests = [];
+        let leaves = [];
+
+        if (storedRequests) requests = JSON.parse(storedRequests);
+        if (storedLeaves) leaves = JSON.parse(storedLeaves);
+
+        if (type === 'rejected' && rejectedRequest) {
+            const updated = requests.map(r => r.id === rejectedRequest.id ? { ...r, status: 'RejectedSeen' } : r);
+            localStorage.setItem('hostelChangeRequests', JSON.stringify(updated));
+            setRejectedRequest(null);
+        } else if (type === 'approved' && approvedRequest) {
+            const updated = requests.map(r => r.id === approvedRequest.id ? { ...r, status: 'ApprovedSeen' } : r);
+            localStorage.setItem('hostelChangeRequests', JSON.stringify(updated));
+            setApprovedRequest(null);
+        } else if (type === 'leave' && leaveNotification) {
+            const updated = leaves.map(l => l.id === leaveNotification.id ? { ...l, status: l.status + 'Seen' } : l);
+            localStorage.setItem('leaveRequests', JSON.stringify(updated));
+            setLeaveNotification(null);
+        }
+    };
+
+    // Auto-dismiss notifications
+    React.useEffect(() => {
+        if (rejectedRequest) {
+            const timer = setTimeout(() => {
+                dismissNotification('rejected');
+            }, 6000);
+            return () => clearTimeout(timer);
+        }
+    }, [rejectedRequest]);
+
+    React.useEffect(() => {
+        if (approvedRequest) {
+            const timer = setTimeout(() => {
+                dismissNotification('approved');
+            }, 6000);
+            return () => clearTimeout(timer);
+        }
+    }, [approvedRequest]);
+
+    React.useEffect(() => {
+        if (leaveNotification) {
+            const timer = setTimeout(() => {
+                dismissNotification('leave');
+            }, 6000);
+            return () => clearTimeout(timer);
+        }
+    }, [leaveNotification]);
 
     return (
         <div className="min-h-screen bg-[#F3F4F6] font-sans">
@@ -38,6 +151,77 @@ const StudentDashboard = () => {
             </nav>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Notifications */}
+                {rejectedRequest && (
+                    <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative flex items-start gap-3 shadow-sm animate-fade-in">
+                        <AlertCircle className="shrink-0 mt-0.5" size={20} />
+                        <div className="flex-1">
+                            <strong className="font-bold block">Transfer Request Rejected</strong>
+                            <span className="block sm:inline text-sm mt-1">
+                                Your request to transfer to <strong>{rejectedRequest.requestedHostel}</strong> has been rejected.
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => dismissNotification('rejected')}
+                            className="absolute top-0 bottom-0 right-0 px-4 py-3 text-red-700 hover:text-red-900 transition-colors"
+                        >
+                            <span className="sr-only">Dismiss</span>
+                            <svg className="fill-current h-6 w-6" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <title>Close</title>
+                                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+
+                {approvedRequest && (
+                    <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg relative flex items-start gap-3 shadow-sm animate-fade-in">
+                        <CheckCircle className="shrink-0 mt-0.5" size={20} />
+                        <div className="flex-1">
+                            <strong className="font-bold block">Transfer Request Approved!</strong>
+                            <span className="block sm:inline text-sm mt-1">
+                                Your request to transfer to <strong>{approvedRequest.requestedHostel}</strong> has been approved. Your hostel allocation has been updated.
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => dismissNotification('approved')}
+                            className="absolute top-0 bottom-0 right-0 px-4 py-3 text-green-700 hover:text-green-900 transition-colors"
+                        >
+                            <span className="sr-only">Dismiss</span>
+                            <svg className="fill-current h-6 w-6" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <title>Close</title>
+                                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+
+                {leaveNotification && (
+                    <div className={`mb-6 px-4 py-3 rounded-lg relative flex items-start gap-3 shadow-sm animate-fade-in border ${leaveNotification.status === 'Approved'
+                            ? 'bg-green-50 border-green-200 text-green-700'
+                            : 'bg-red-50 border-red-200 text-red-700'
+                        }`}>
+                        {leaveNotification.status === 'Approved' ? <CheckCircle className="shrink-0 mt-0.5" size={20} /> : <AlertCircle className="shrink-0 mt-0.5" size={20} />}
+                        <div className="flex-1">
+                            <strong className="font-bold block">Leave Request {leaveNotification.status}</strong>
+                            <span className="block sm:inline text-sm mt-1">
+                                Your <strong>{leaveNotification.type}</strong> leave request from <strong>{leaveNotification.from}</strong> to <strong>{leaveNotification.to}</strong> has been {leaveNotification.status.toLowerCase()}.
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => dismissNotification('leave')}
+                            className={`absolute top-0 bottom-0 right-0 px-4 py-3 transition-colors ${leaveNotification.status === 'Approved' ? 'text-green-700 hover:text-green-900' : 'text-red-700 hover:text-red-900'
+                                }`}
+                        >
+                            <span className="sr-only">Dismiss</span>
+                            <svg className="fill-current h-6 w-6" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <title>Close</title>
+                                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-gray-900">

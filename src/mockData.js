@@ -12,6 +12,7 @@ export const userData = {
 export const menuData = {
     breakfast: { title: "Breakfast", items: "Not Available" },
     lunch: { title: "Lunch", items: "Not Available" },
+    snacks: { title: "Snacks", items: "Not Available" },
     dinner: { title: "Dinner", items: "Not Available" }
 };
 
