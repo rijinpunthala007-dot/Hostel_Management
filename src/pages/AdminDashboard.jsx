@@ -11,9 +11,15 @@ const AdminDashboard = () => {
     // State for interactive features
     const [students, setStudents] = useState(allStudents);
     const [hostelList, setHostelList] = useState(hostels);
-    const [noticeList, setNoticeList] = useState(initialAnnouncements);
+    const [noticeList, setNoticeList] = useState(() => {
+        const saved = localStorage.getItem('announcements');
+        return saved ? JSON.parse(saved) : initialAnnouncements;
+    });
     const [complaintList, setComplaintList] = useState(complaints);
-    const [menu, setMenu] = useState(menuData);
+    const [menu, setMenu] = useState(() => {
+        const saved = localStorage.getItem('foodMenu');
+        return saved ? JSON.parse(saved) : menuData;
+    });
     const [leaveRequests, setLeaveRequests] = useState([]);
     const [changeRequests, setChangeRequests] = useState([]);
 
@@ -127,11 +133,14 @@ const AdminDashboard = () => {
 
     const handleDeleteNotice = (id) => {
         if (window.confirm('Delete this notice?')) {
-            setNoticeList(noticeList.filter(n => n.id !== id));
+            const updated = noticeList.filter(n => n.id !== id);
+            setNoticeList(updated);
+            localStorage.setItem('announcements', JSON.stringify(updated));
         }
     };
 
     const handleSaveMenu = () => {
+        localStorage.setItem('foodMenu', JSON.stringify(menu));
         alert('Food menu updated successfully!');
     };
 
@@ -479,7 +488,28 @@ const AdminDashboard = () => {
                         </div>
                         <div className="flex justify-end gap-2 mt-6">
                             <button onClick={() => setShowNoticeModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm">Cancel</button>
-                            <button onClick={() => { alert('Notice Posted Successfully!'); setShowNoticeModal(false); }} className="px-4 py-2 bg-[#991B1B] text-white rounded text-sm font-medium">Post Notice</button>
+                            <button onClick={(e) => {
+                                // Find inputs relative to the button
+                                const container = e.target.closest('.bg-white');
+                                const title = container.querySelector('input').value;
+                                const desc = container.querySelector('textarea').value;
+
+                                if (title && desc) {
+                                    const newNotice = {
+                                        id: Date.now(),
+                                        title,
+                                        desc,
+                                        date: new Date().toLocaleDateString()
+                                    };
+                                    const updated = [newNotice, ...noticeList];
+                                    setNoticeList(updated);
+                                    localStorage.setItem('announcements', JSON.stringify(updated));
+                                    alert('Notice Posted Successfully!');
+                                    setShowNoticeModal(false);
+                                } else {
+                                    alert('Please fill in all fields');
+                                }
+                            }} className="px-4 py-2 bg-[#991B1B] text-white rounded text-sm font-medium">Post Notice</button>
                         </div>
                     </div>
                 </div>

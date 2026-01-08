@@ -6,11 +6,17 @@ import { userData, announcements } from '../mockData';
 const StudentDashboard = () => {
     const navigate = useNavigate();
     const [user, setUser] = React.useState(userData);
+    const [notices, setNotices] = React.useState(announcements);
 
     React.useEffect(() => {
         const storedUser = localStorage.getItem('userData');
         if (storedUser) {
             setUser(JSON.parse(storedUser));
+        }
+
+        const storedNotices = localStorage.getItem('announcements');
+        if (storedNotices) {
+            setNotices(JSON.parse(storedNotices));
         }
     }, []);
 
@@ -114,8 +120,8 @@ const StudentDashboard = () => {
                             Announcements
                         </h2>
                         <div className="space-y-4">
-                            {announcements.length > 0 ? (
-                                announcements.map((item) => (
+                            {notices.length > 0 ? (
+                                notices.map((item) => (
                                     <div key={item.id} className="bg-white p-5 rounded-lg shadow-sm border-l-4 border-[#991B1B]">
                                         <div className="flex justify-between items-start mb-2">
                                             <h3 className="font-semibold text-gray-900">{item.title}</h3>
