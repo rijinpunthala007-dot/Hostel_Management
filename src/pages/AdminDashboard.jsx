@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu, ArrowRightLeft } from 'lucide-react';
+import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu, ArrowRightLeft, UserPlus } from 'lucide-react';
 import { allStudents, complaints, hostels, announcements as initialAnnouncements, menuData } from '../mockData';
 
 const AdminDashboard = () => {
@@ -59,6 +59,7 @@ const AdminDashboard = () => {
                     user.hostelName = request.requestedHostel;
                     user.roomNumber = "Allocated"; // Reset room
                     user.roomType = "Pending"; // Reset type
+                    user.status = 'Allocated'; // Update status
                     localStorage.setItem('userData', JSON.stringify(user));
                 }
             }
@@ -103,6 +104,8 @@ const AdminDashboard = () => {
     const [showHostelModal, setShowHostelModal] = useState(false);
     const [editingHostel, setEditingHostel] = useState(null);
     const [showNoticeModal, setShowNoticeModal] = useState(false);
+    const [showApplicantModal, setShowApplicantModal] = useState(false);
+    const [selectedApplicant, setSelectedApplicant] = useState(null);
 
     // Handlers
     const handleDeleteStudent = (id) => {
@@ -153,12 +156,12 @@ const AdminDashboard = () => {
 
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: Home },
+        { id: 'admissions', label: 'Admissions & Transfers', icon: ArrowRightLeft },
         { id: 'students', label: 'Manage Students', icon: Users },
         { id: 'hostels', label: 'Manage Hostels', icon: BedDouble },
         { id: 'food', label: 'Food Menu', icon: Utensils },
         { id: 'complaints', label: 'Complaints', icon: AlertCircle },
         { id: 'leaves', label: 'Leave Requests', icon: Calendar },
-        { id: 'transfers', label: 'Hostel Transfers', icon: ArrowRightLeft },
         { id: 'notices', label: 'Notice Board', icon: Bell },
     ];
 
@@ -176,8 +179,11 @@ const AdminDashboard = () => {
                 return <FoodMenuManage menu={menu} setMenu={setMenu} onSave={handleSaveMenu} />;
             case 'leaves':
                 return <LeaveManage requests={leaveRequests} onAction={handleLeaveAction} />;
-            case 'transfers':
-                return <TransferRequestList requests={changeRequests} onAction={handleChangeRequestAction} />;
+            case 'admissions':
+                return <TransferRequestList requests={changeRequests} onAction={handleChangeRequestAction} onViewDetails={(applicant) => {
+                    setSelectedApplicant(applicant);
+                    setShowApplicantModal(true);
+                }} />;
             case 'notices':
                 return <NoticeBoardManage notices={noticeList} onDelete={handleDeleteNotice} onAdd={() => setShowNoticeModal(true)} />;
             default:
@@ -273,6 +279,11 @@ const AdminDashboard = () => {
             <main className="flex-1 ml-0 md:ml-64 p-8 pt-20 md:pt-8 bg-[#F3F4F6] min-h-screen">
                 {renderContent()}
             </main>
+
+            {/* Applicant Details Modal */}
+            {showApplicantModal && (
+                <ApplicantDetailsModal applicant={selectedApplicant} onClose={() => setShowApplicantModal(false)} />
+            )}
 
             {/* Simulated Modals */}
             {showStudentModal && (
@@ -391,7 +402,7 @@ const AdminDashboard = () => {
                                     <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 border-b pb-1">Fee Details</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Fee Due (₹)</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Fee Due (â‚¹)</label>
                                             <input name="feeDue" defaultValue={editingStudent?.feeDue} type="number" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="0" />
                                         </div>
                                     </div>
@@ -418,8 +429,13 @@ const AdminDashboard = () => {
                         <form onSubmit={(e) => {
                             e.preventDefault();
                             const formData = new FormData(e.target);
-                            const facilitiesInput = formData.get('facilities');
                             const facilitiesList = facilitiesInput ? facilitiesInput.split(',').map(f => f.trim()).filter(f => f) : [];
+
+                            const roomImagesInput = formData.get('roomImages');
+                            const roomImagesList = roomImagesInput ? roomImagesInput.split(/[\n,]/).map(f => f.trim()).filter(f => f) : [];
+
+                            const facilityImagesInput = formData.get('facilityImages');
+                            const facilityImagesList = facilityImagesInput ? facilityImagesInput.split(/[\n,]/).map(f => f.trim()).filter(f => f) : [];
 
                             const hostelData = {
                                 id: editingHostel ? editingHostel.id : hostelList.length + 1,
@@ -429,6 +445,8 @@ const AdminDashboard = () => {
                                 description: formData.get('description'),
                                 image: formData.get('image'),
                                 facilities: facilitiesList,
+                                roomImages: roomImagesList,
+                                facilityImages: facilityImagesList,
                                 type: formData.get('type')
                             };
 
@@ -468,8 +486,17 @@ const AdminDashboard = () => {
                                     <input name="image" defaultValue={editingHostel?.image} type="text" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="https://example.com/image.jpg" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Facilities (comma separated)</label>
                                     <input name="facilities" defaultValue={editingHostel?.facilities?.join(', ')} type="text" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="WiFi, Gym, Study Hall..." />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Room Photos (Ref Links)</label>
+                                    <textarea name="roomImages" defaultValue={editingHostel?.roomImages?.join(',\n')} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" rows="3" placeholder="https://example.com/room1.jpg,&#10;https://example.com/room2.jpg"></textarea>
+                                    <p className="text-xs text-gray-500 mt-1">Separate multiple URLs with commas</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Facility Photos (Ref Links)</label>
+                                    <textarea name="facilityImages" defaultValue={editingHostel?.facilityImages?.join(',\n')} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" rows="3" placeholder="https://example.com/gym.jpg,&#10;https://example.com/library.jpg"></textarea>
+                                    <p className="text-xs text-gray-500 mt-1">Separate multiple URLs with commas</p>
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
@@ -653,7 +680,7 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
                                     <div>
                                         {student.feeDue > 0 ? (
                                             <span className="inline-block bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-medium">
-                                                Due: ₹{student.feeDue}
+                                                Due: â‚¹{student.feeDue}
                                             </span>
                                         ) : (
                                             <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
@@ -695,7 +722,7 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             {student.feeDue > 0 ? (
                                                 <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-medium">
-                                                    Due: ₹{student.feeDue}
+                                                    Due: â‚¹{student.feeDue}
                                                 </span>
                                             ) : (
                                                 <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">
@@ -777,46 +804,80 @@ const HostelManage = ({ hostels, onDelete, onAdd, onEdit }) => (
     </div>
 );
 
-const ComplaintList = ({ complaints, setComplaints }) => (
-    <div className="animate-fade-in">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Student Complaints</h2>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 grid gap-6">
-                {complaints.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">No complaints found.</p>
-                ) : (
-                    complaints.map(complaint => (
-                        <div key={complaint.id} className="flex flex-col sm:flex-row gap-4 p-4 border border-gray-100 rounded-lg bg-gray-50/50 hover:bg-white transition-colors">
-                            <div className="flex-1">
-                                <div className="flex justify-between mb-2">
-                                    <span className={`text-xs px-2 py-1 rounded font-medium ${complaint.status === 'Resolved' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                                        }`}>{complaint.type}</span>
-                                    <span className="text-gray-400 text-xs">{complaint.date}</span>
+const ComplaintList = ({ complaints, setComplaints }) => {
+    const [selectedImage, setSelectedImage] = React.useState(null);
+
+    return (
+        <div className="animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Student Complaints</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="p-6 grid gap-6">
+                    {complaints.length === 0 ? (
+                        <p className="text-gray-500 text-center py-8">No complaints found.</p>
+                    ) : (
+                        complaints.map(complaint => (
+                            <div key={complaint.id} className="flex flex-col sm:flex-row gap-4 p-4 border border-gray-100 rounded-lg bg-gray-50/50 hover:bg-white transition-colors">
+                                <div className="flex-1">
+                                    <div className="flex justify-between mb-2">
+                                        <span className={`text-xs px-2 py-1 rounded font-medium ${complaint.status === 'Resolved' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                            }`}>{complaint.type}</span>
+                                        <span className="text-gray-400 text-xs">{complaint.date}</span>
+                                    </div>
+                                    <h4 className="font-medium text-gray-900 mb-1">{complaint.desc}</h4>
+                                    {complaint.image && (
+                                        <div className="mb-2">
+                                            <img
+                                                src={complaint.image}
+                                                alt="Complaint Issue"
+                                                className="h-24 w-auto rounded border border-gray-200 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                                onClick={() => setSelectedImage(complaint.image)}
+                                            />
+                                        </div>
+                                    )}
+                                    <p className="text-sm text-gray-500">Raised by: <span className="font-medium text-gray-700">{complaint.student}</span></p>
                                 </div>
-                                <h4 className="font-medium text-gray-900 mb-1">{complaint.desc}</h4>
-                                <p className="text-sm text-gray-500">Raised by: <span className="font-medium text-gray-700">{complaint.student}</span></p>
+                                <div className="flex items-center gap-2">
+                                    <select
+                                        value={complaint.status}
+                                        onChange={(e) => {
+                                            const newStatus = e.target.value;
+                                            setComplaints(complaints.map(c => c.id === complaint.id ? { ...c, status: newStatus } : c));
+                                        }}
+                                        className="text-sm border-gray-200 rounded-md p-2 bg-white cursor-pointer focus:ring-2 focus:ring-[#991B1B] outline-none"
+                                    >
+                                        <option value="Pending">Pending</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Resolved">Resolved</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <select
-                                    value={complaint.status}
-                                    onChange={(e) => {
-                                        const newStatus = e.target.value;
-                                        setComplaints(complaints.map(c => c.id === complaint.id ? { ...c, status: newStatus } : c));
-                                    }}
-                                    className="text-sm border-gray-200 rounded-md p-2 bg-white cursor-pointer focus:ring-2 focus:ring-[#991B1B] outline-none"
-                                >
-                                    <option value="Pending">Pending</option>
-                                    <option value="In Progress">In Progress</option>
-                                    <option value="Resolved">Resolved</option>
-                                </select>
-                            </div>
-                        </div>
-                    ))
-                )}
+                        ))
+                    )}
+                </div>
             </div>
+
+            {/* Image Preview Modal */}
+            {selectedImage && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setSelectedImage(null)}>
+                    <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
+                        <button
+                            className="absolute -top-10 right-0 text-white hover:text-gray-300"
+                            onClick={() => setSelectedImage(null)}
+                        >
+                            <X size={24} />
+                        </button>
+                        <img
+                            src={selectedImage}
+                            alt="Full Preview"
+                            className="max-w-full max-h-[90vh] rounded-lg shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
-    </div>
-);
+    );
+};
 
 const FoodMenuManage = ({ menu, setMenu, onSave }) => (
     <div className="animate-fade-in">
@@ -930,60 +991,201 @@ const LeaveManage = ({ requests, onAction }) => (
     </div>
 );
 
-const TransferRequestList = ({ requests, onAction }) => (
-    <div className="animate-fade-in">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Hostel Transfer Requests</h2>
-        {requests.length === 0 ? (
-            <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
-                No transfer requests found.
-            </div>
-        ) : (
-            <div className="space-y-4">
-                {requests.map(req => (
-                    <div key={req.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${req.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                                    req.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                        'bg-orange-100 text-orange-700'
-                                    }`}>{req.status}</span>
-                                <span className="text-sm text-gray-500">{req.date}</span>
-                            </div>
-                            <h3 className="font-bold text-gray-900 mb-1">Request for {req.requestedHostel}</h3>
-                            <p className="text-sm text-gray-600">
-                                From: <span className="font-medium text-gray-800">{req.currentHostel}</span>
-                            </p>
-                            <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
-                                <Users size={16} />
-                                <span>{req.studentName} ({req.regNo})</span>
-                            </div>
-                            <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded border border-gray-100 italic">
-                                "{req.reason}"
-                            </p>
-                        </div>
+const TransferRequestList = ({ requests, onAction, onViewDetails }) => {
+    // Separate requests into Allocation (New) and Transfers
+    const allocationRequests = requests.filter(r => r.type === 'Allocation');
+    const transferRequests = requests.filter(r => r.type !== 'Allocation'); // Legacy or explicit 'Transfer'
 
-                        {req.status === 'Pending' && (
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => onAction(req.id, 'Approved')}
-                                    className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
-                                >
-                                    <CheckCircle size={16} /> Approve
-                                </button>
-                                <button
-                                    onClick={() => onAction(req.id, 'Rejected')}
-                                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
-                                >
-                                    <XCircle size={16} /> Reject
-                                </button>
+    return (
+        <div className="animate-fade-in space-y-8">
+            {/* New Admissions Section */}
+            <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <UserPlus size={24} className="text-[#991B1B]" />
+                    New Admission Requests
+                </h2>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div className="p-6">
+                        {allocationRequests.length === 0 ? (
+                            <p className="text-gray-500 text-center py-4">No new admission requests pending.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {allocationRequests.map(req => (
+                                    <div key={req.id} className="p-4 border border-gray-100 rounded-lg bg-blue-50/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                <h4 className="font-bold text-gray-900 text-lg">{req.studentName}</h4>
+                                                <span className={`text-xs px-2 py-0.5 rounded-full ${req.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                    req.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                                        'bg-red-100 text-red-700'
+                                                    }`}>
+                                                    {req.status}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-600">Reg No: <span className="font-mono font-medium">{req.regNo}</span></p>
+                                            <p className="text-sm text-gray-600 mt-1">Requested Hostel: <span className="font-bold text-[#991B1B]">{req.requestedHostel}</span></p>
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 items-stretch sm:items-center">
+                                            {req.status === 'Pending' && (
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => onAction(req.id, 'Rejected')} className="flex-1 sm:flex-none bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">Reject</button>
+                                                    <button onClick={() => onAction(req.id, 'Approved')} className="flex-1 sm:flex-none bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm">Approve</button>
+                                                </div>
+                                            )}
+                                            {req.studentDetails && (
+                                                <button onClick={() => onViewDetails(req.studentDetails)} className="text-center sm:text-left text-blue-600 hover:text-blue-800 text-sm font-medium underline">
+                                                    View Info
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
-                ))}
+                </div>
             </div>
-        )}
-    </div>
-);
 
+            {/* Transfer Requests Section (Legacy) */}
+            <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <ArrowRightLeft size={24} className="text-gray-600" />
+                    Hostel Transfer Requests
+                </h2>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div className="p-6">
+                        {transferRequests.length === 0 ? (
+                            <p className="text-gray-500 text-center py-4">No transfer requests pending.</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm text-gray-600">
+                                    <thead className="bg-gray-50 text-gray-900 font-medium">
+                                        <tr>
+                                            <th className="px-6 py-3 whitespace-nowrap">Student</th>
+                                            <th className="px-6 py-3 whitespace-nowrap">Current Hostel</th>
+                                            <th className="px-6 py-3 whitespace-nowrap">Requested</th>
+                                            <th className="px-6 py-3 whitespace-nowrap">Reason</th>
+                                            <th className="px-6 py-3 whitespace-nowrap">Status</th>
+                                            <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {transferRequests.map(req => (
+                                            <tr key={req.id}>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-medium text-gray-900">{req.studentName}</div>
+                                                    <div className="text-xs text-gray-500 font-mono">{req.regNo}</div>
+                                                </td>
+                                                <td className="px-6 py-4">{req.currentHostel}</td>
+                                                <td className="px-6 py-4 font-medium text-[#991B1B]">{req.requestedHostel}</td>
+                                                <td className="px-6 py-4 max-w-xs truncate" title={req.reason}>{req.reason}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${req.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                        req.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                                            'bg-red-100 text-red-700'
+                                                        }`}>
+                                                        {req.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    {req.status === 'Pending' && (
+                                                        <div className="flex justify-end gap-2">
+                                                            <button onClick={() => onAction(req.id, 'Rejected')} className="text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><XCircle size={18} /></button>
+                                                            <button onClick={() => onAction(req.id, 'Approved')} className="text-green-600 hover:bg-green-50 p-1.5 rounded transition-colors"><CheckCircle size={18} /></button>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ApplicantDetailsModal = ({ applicant, onClose }) => {
+    if (!applicant) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+                <div className="bg-[#991B1B] px-6 py-4 flex justify-between items-center text-white">
+                    <h3 className="text-lg font-bold">Applicant Details</h3>
+                    <button onClick={onClose} className="hover:bg-white/20 p-1 rounded-full"><X size={20} /></button>
+                </div>
+
+                <div className="p-6">
+                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                        {/* Profile Photo */}
+                        <div className="flex-shrink-0 mx-auto md:mx-0">
+                            <div className="w-32 h-32 rounded-full border-4 border-gray-100 shadow-sm overflow-hidden bg-gray-50 flex items-center justify-center">
+                                {applicant.profileImage ? (
+                                    <img src={applicant.profileImage} alt={applicant.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <Users size={48} className="text-gray-300" />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 w-full space-y-4">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">{applicant.name}</h2>
+                                <p className="text-gray-500 font-mono">{applicant.regNo}</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="text-xs text-gray-500 uppercase">Department</p>
+                                    <p className="font-medium">{applicant.department}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="text-xs text-gray-500 uppercase">Year</p>
+                                    <p className="font-medium">{applicant.year}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="text-xs text-gray-500 uppercase">Gender</p>
+                                    <p className="font-medium">{applicant.gender || 'N/A'}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="text-xs text-gray-500 uppercase">Email</p>
+                                    <p className="font-medium truncate" title={applicant.email}>{applicant.email}</p>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="text-xs text-gray-500 uppercase">Phone</p>
+                                    <p className="font-medium">{applicant.phone}</p>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-gray-100 pt-4">
+                                <h4 className="text-sm font-bold text-gray-900 mb-2">Guardian Info</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase">Guardian Name</p>
+                                        <p className="font-medium">{applicant.parentName}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase">Guardian Phone</p>
+                                        <p className="font-medium">{applicant.parentPhone}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-gray-50 px-6 py-4 flex justify-end">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors">Close</button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default AdminDashboard;

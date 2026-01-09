@@ -1,6 +1,7 @@
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import StudentRegistration from './pages/StudentRegistration';
 import StudentDashboard from './pages/StudentDashboard';
 import RoomSelection from './pages/RoomSelection';
 import HostelSelection from './pages/HostelSelection';
@@ -13,13 +14,36 @@ import StudentProfile from './pages/StudentProfile';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
+const ProtectedRoute = ({ children }) => {
+    const user = JSON.parse(localStorage.getItem('userData') || 'null');
+
+    if (!user) {
+        return <Login />;
+    }
+
+    if (user.status === 'Pending_Hostel' || user.status === 'Pending_Approval') {
+        // Redirect pending users to Hostel Selection page
+        return <HostelSelection />;
+    }
+
+    return children;
+};
+
 function App() {
     return (
-        <HashRouter>
+        <HashRouter future={{ v7_relativeSplatPath: true }}>
             <ErrorBoundary>
                 <Routes>
                     <Route path="/" element={<Login />} />
-                    <Route path="/student-dashboard" element={<StudentDashboard />} />
+                    <Route path="/register" element={<StudentRegistration />} />
+                    <Route
+                        path="/student-dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <StudentDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
                     <Route path="/hostels" element={<HostelSelection />} />
                     <Route path="/room-selection" element={<RoomSelection />} />
                     <Route path="/food-menu" element={<FoodMenu />} />

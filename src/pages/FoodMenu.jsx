@@ -31,7 +31,7 @@ const FoodMenu = () => {
                 >
                     <ArrowLeft size={20} />
                 </button>
-                <h1 className="font-bold text-gray-800 text-xl">Weekly Menu</h1>
+                <h1 className="font-bold text-gray-800 text-xl">Food Menu</h1>
             </nav>
 
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

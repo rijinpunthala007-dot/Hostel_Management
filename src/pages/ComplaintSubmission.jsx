@@ -7,10 +7,22 @@ const ComplaintSubmission = () => {
     const navigate = useNavigate();
     const [category, setCategory] = useState('Infrastructure');
     const [description, setDescription] = useState('');
+    const [image, setImage] = useState(null);
     const [myComplaints, setMyComplaints] = useState(() => {
         const saved = localStorage.getItem('complaintList');
         return saved ? JSON.parse(saved) : complaints;
     });
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImage(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -19,6 +31,7 @@ const ComplaintSubmission = () => {
             student: "Rahul Kumar", // Mocked current user - ideally get from userData
             type: category,
             desc: description,
+            image: image,
             status: "Pending",
             date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
         };
@@ -27,6 +40,7 @@ const ComplaintSubmission = () => {
         localStorage.setItem('complaintList', JSON.stringify(updatedList));
         alert('Complaint submitted successfully!');
         setDescription('');
+        setImage(null);
     };
 
     return (
@@ -78,6 +92,23 @@ const ComplaintSubmission = () => {
                                     onChange={(e) => setDescription(e.target.value)}
                                 ></textarea>
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Upload Photo (Optional)</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-[#991B1B] hover:file:bg-red-100"
+                                />
+                                {image && (
+                                    <div className="mt-2">
+                                        <p className="text-xs text-green-600 mb-1">Preview:</p>
+                                        <img src={image} alt="Preview" className="h-20 w-auto rounded border border-gray-300 object-cover" />
+                                    </div>
+                                )}
+                            </div>
+
                             <button
                                 type="submit"
                                 className="w-full bg-[#991B1B] text-white py-2 rounded-lg font-medium hover:bg-red-800 transition-colors mt-4"
@@ -113,6 +144,11 @@ const ComplaintSubmission = () => {
                                         </span>
                                     </div>
                                     <p className="text-sm text-gray-700 font-medium">{item.desc}</p>
+                                    {item.image && (
+                                        <div className="mt-2">
+                                            <img src={item.image} alt="Complaint" className="h-24 w-auto rounded-md border border-gray-200 object-cover" />
+                                        </div>
+                                    )}
                                     {item.status === 'Resolved' && (
                                         <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
                                             <MessageSquare size={12} /> Admin marked as resolved.

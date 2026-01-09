@@ -87,6 +87,20 @@ const Login = () => {
                         </button>
                     </form>
 
+                    {activeTab === 'student' && (
+                        <div className="mt-6 text-center">
+                            <p className="text-gray-600">
+                                New Student?{' '}
+                                <span
+                                    onClick={() => navigate('/register')}
+                                    className="text-[#991B1B] font-semibold cursor-pointer hover:underline"
+                                >
+                                    Register Here
+                                </span>
+                            </p>
+                        </div>
+                    )}
+
                     <div className="mt-8 text-center text-sm text-gray-500">
                         By signing in, you agree to our{' '}
                         <a href="#" className="font-medium text-gray-900 hover:underline">Terms of Service</a>
