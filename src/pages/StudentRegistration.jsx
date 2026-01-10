@@ -31,6 +31,19 @@ const StudentRegistration = () => {
             return;
         }
 
+        // DUPLICATE CHECK: Prevent registering with an existing RegNo (e.g. CS2023001)
+        const storedStudents = localStorage.getItem('studentList');
+        const existingStudents = storedStudents ? JSON.parse(storedStudents) : [];
+        // Important: You might also want to check against your 'mockData' if it's not fully loaded into localStorage yet
+        // For now, assuming studentList is the source of truth if it exists, otherwise check basic mock consistency?
+        // Actually, let's check against both if possible, or just the studentList which should contain everyone.
+
+        const isDuplicate = existingStudents.some(s => s.regNo === formData.regNo);
+        if (isDuplicate) {
+            alert(`Registration Number ${formData.regNo} already exists! Please use a unique ID.`);
+            return;
+        }
+
         // Create new user object
         const newUser = {
             ...formData,

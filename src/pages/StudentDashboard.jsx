@@ -21,9 +21,20 @@ const StudentDashboard = () => {
             if (allStudents) {
                 const students = JSON.parse(allStudents);
                 const latestData = students.find(s => s.regNo === currentUser.regNo);
+
                 if (latestData) {
-                    // Merge latest data (preserving session fields if needed, but prioritizing DB)
-                    currentUser = { ...currentUser, ...latestData };
+                    // SAFE MERGE: Only update status/admin-controlled fields. 
+                    // DO NOT overwrite name/email/phone from the DB if they differ (unless intended).
+                    // This prevents "identity swapping" if a RegNo collision somehow happened.
+                    currentUser = {
+                        ...currentUser,
+                        feeDue: latestData.feeDue,
+                        hostelName: latestData.hostel, // Map 'hostel' from DB to 'hostelName' in session
+                        roomNumber: latestData.room,   // Map 'room' from DB to 'roomNumber' in session
+                        status: latestData.status,
+                        // Keep other fields like name, email, phone from 'currentUser' (session)
+                    };
+
                     // Update session storage to keep it in sync
                     localStorage.setItem('userData', JSON.stringify(currentUser));
                 }
