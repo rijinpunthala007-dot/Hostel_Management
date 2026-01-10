@@ -9,7 +9,10 @@ const AdminDashboard = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // State for interactive features
-    const [students, setStudents] = useState(allStudents);
+    const [students, setStudents] = useState(() => {
+        const saved = localStorage.getItem('studentList');
+        return saved ? JSON.parse(saved) : allStudents;
+    });
     const [hostelList, setHostelList] = useState(hostels);
     const [noticeList, setNoticeList] = useState(() => {
         const saved = localStorage.getItem('announcements');
@@ -23,6 +26,10 @@ const AdminDashboard = () => {
     React.useEffect(() => {
         localStorage.setItem('complaintList', JSON.stringify(complaintList));
     }, [complaintList]);
+
+    React.useEffect(() => {
+        localStorage.setItem('studentList', JSON.stringify(students));
+    }, [students]);
     const [menu, setMenu] = useState(() => {
         const saved = localStorage.getItem('foodMenu');
         return saved ? JSON.parse(saved) : menuData;
@@ -49,6 +56,27 @@ const AdminDashboard = () => {
         if (action === 'Approved') {
             // Find request details
             const request = changeRequests.find(r => r.id === id);
+
+            // Handle New Allocation (Add to Student List)
+            if (request && request.type === 'Allocation') {
+                const newStudent = {
+                    id: students.length + 1,
+                    name: request.studentName,
+                    regNo: request.regNo,
+                    department: request.studentDetails?.department || 'N/A',
+                    year: request.studentDetails?.year || '1st Year',
+                    email: request.studentDetails?.email || 'N/A',
+                    phone: request.studentDetails?.phone || 'N/A',
+                    parentName: request.studentDetails?.parentName || 'N/A',
+                    parentPhone: request.studentDetails?.parentPhone || 'N/A',
+                    hostel: request.requestedHostel,
+                    room: "Allocated", // In real app, assign specific room
+                    status: 'Active',
+                    feeDue: 0
+                };
+                setStudents([...students, newStudent]);
+            }
+
             // Update User Data in Local Storage (simulating DB update for the logged in user)
             const storedUser = localStorage.getItem('userData');
             if (storedUser) {
@@ -402,7 +430,7 @@ const AdminDashboard = () => {
                                     <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 border-b pb-1">Fee Details</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Fee Due (â‚¹)</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Fee Due (₹)</label>
                                             <input name="feeDue" defaultValue={editingStudent?.feeDue} type="number" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="0" />
                                         </div>
                                     </div>
@@ -680,7 +708,7 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
                                     <div>
                                         {student.feeDue > 0 ? (
                                             <span className="inline-block bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-medium">
-                                                Due: â‚¹{student.feeDue}
+                                                Due: ₹{student.feeDue}
                                             </span>
                                         ) : (
                                             <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
@@ -722,7 +750,7 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             {student.feeDue > 0 ? (
                                                 <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-medium">
-                                                    Due: â‚¹{student.feeDue}
+                                                    Due: ₹{student.feeDue}
                                                 </span>
                                             ) : (
                                                 <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">

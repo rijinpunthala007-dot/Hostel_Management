@@ -16,6 +16,18 @@ const StudentDashboard = () => {
         let currentUser = user;
         if (storedUser) {
             currentUser = JSON.parse(storedUser);
+            // SYNC FIX: Check main student list for latest updates (like Fees)
+            const allStudents = localStorage.getItem('studentList');
+            if (allStudents) {
+                const students = JSON.parse(allStudents);
+                const latestData = students.find(s => s.regNo === currentUser.regNo);
+                if (latestData) {
+                    // Merge latest data (preserving session fields if needed, but prioritizing DB)
+                    currentUser = { ...currentUser, ...latestData };
+                    // Update session storage to keep it in sync
+                    localStorage.setItem('userData', JSON.stringify(currentUser));
+                }
+            }
             setUser(currentUser);
         }
 
@@ -282,16 +294,17 @@ const StudentDashboard = () => {
                     </div>
 
                     {/* Fee Status Card */}
+                    {/* Fee Status Card */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-start justify-between mb-4">
-                            <div className="bg-green-50 p-2 rounded-full">
-                                <FileText className="text-green-600" size={24} />
+                            <div className={`p-2 rounded-full ${user.feeDue > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+                                <FileText className={user.feeDue > 0 ? 'text-red-600' : 'text-green-600'} size={24} />
                             </div>
                         </div>
-                        <h3 className="font-bold text-2xl text-gray-900">{user.feeDue}</h3>
+                        <h3 className="font-bold text-2xl text-gray-900">₹{user.feeDue}</h3>
                         <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                            <span className="w-2 h-2 bg-green-500 rounded-full inline-block"></span>
-                            No dues pending
+                            <span className={`w-2 h-2 rounded-full inline-block ${user.feeDue > 0 ? 'bg-red-500' : 'bg-green-500'}`}></span>
+                            {user.feeDue > 0 ? 'Payment Pending' : 'No dues pending'}
                         </p>
                     </div>
                 </div>
