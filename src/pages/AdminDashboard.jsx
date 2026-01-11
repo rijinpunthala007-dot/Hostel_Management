@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu, ArrowRightLeft, UserPlus } from 'lucide-react';
+import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu, ArrowRightLeft, UserPlus, User } from 'lucide-react';
 import { allStudents, complaints, hostels, announcements as initialAnnouncements, menuData } from '../mockData';
 
 const AdminDashboard = () => {
@@ -1068,43 +1068,46 @@ const TransferRequestList = ({ requests, onAction, onViewDetails }) => {
         <div className="animate-fade-in space-y-8">
             {/* New Admissions Section */}
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
                     <UserPlus size={24} className="text-[#991B1B]" />
                     New Admission Requests
                 </h2>
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <div className="p-6">
+                    <div className="p-4 md:p-6">
                         {allocationRequests.length === 0 ? (
                             <p className="text-gray-500 text-center py-4">No new admission requests pending.</p>
                         ) : (
                             <div className="space-y-4">
                                 {allocationRequests.map(req => (
-                                    <div key={req.id} className="p-4 border border-gray-100 rounded-lg bg-blue-50/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                <h4 className="font-bold text-gray-900 text-lg">{req.studentName}</h4>
-                                                <span className={`text-xs px-2 py-0.5 rounded-full ${req.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                    <div key={req.id} className="p-4 border border-gray-100 rounded-lg bg-blue-50/30 flex flex-col gap-4">
+                                        <div className="w-full">
+                                            <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
+                                                <div className="flex flex-col">
+                                                    <h4 className="font-bold text-gray-900 text-lg">{req.studentName}</h4>
+                                                    <span className="text-xs text-gray-500 font-mono">{req.regNo}</span>
+                                                </div>
+                                                <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${req.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
                                                     req.status === 'Approved' ? 'bg-green-100 text-green-700' :
                                                         'bg-red-100 text-red-700'
                                                     }`}>
                                                     {req.status}
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-gray-600">Reg No: <span className="font-mono font-medium">{req.regNo}</span></p>
-                                            <p className="text-sm text-gray-600 mt-1">Requested Hostel: <span className="font-bold text-[#991B1B]">{req.requestedHostel}</span></p>
+                                            <p className="text-sm text-gray-600">Requested: <span className="font-bold text-[#991B1B]">{req.requestedHostel}</span></p>
                                         </div>
 
-                                        <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 items-stretch sm:items-center">
+                                        <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-gray-200 sm:border-0 sm:pt-0 items-stretch sm:items-center justify-between">
+                                            {req.studentDetails && (
+                                                <button onClick={() => onViewDetails(req.studentDetails)} className="text-sm text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1">
+                                                    View Info <ArrowRightLeft size={14} className="rotate-45" />
+                                                </button>
+                                            )}
+
                                             {req.status === 'Pending' && (
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => onAction(req.id, 'Rejected')} className="flex-1 sm:flex-none bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">Reject</button>
+                                                <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                                                    <button onClick={() => onAction(req.id, 'Rejected')} className="flex-1 sm:flex-none bg-white border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors">Reject</button>
                                                     <button onClick={() => onAction(req.id, 'Approved')} className="flex-1 sm:flex-none bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm">Approve</button>
                                                 </div>
-                                            )}
-                                            {req.studentDetails && (
-                                                <button onClick={() => onViewDetails(req.studentDetails)} className="text-center sm:text-left text-blue-600 hover:text-blue-800 text-sm font-medium underline">
-                                                    View Info
-                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -1115,60 +1118,105 @@ const TransferRequestList = ({ requests, onAction, onViewDetails }) => {
                 </div>
             </div>
 
-            {/* Transfer Requests Section (Legacy) */}
+            {/* Transfer Requests Section */}
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
                     <ArrowRightLeft size={24} className="text-gray-600" />
                     Hostel Transfer Requests
                 </h2>
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <div className="p-6">
+                    <div className="p-0 md:p-6">
                         {transferRequests.length === 0 ? (
-                            <p className="text-gray-500 text-center py-4">No transfer requests pending.</p>
+                            <p className="text-gray-500 text-center py-8">No transfer requests pending.</p>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-gray-600">
-                                    <thead className="bg-gray-50 text-gray-900 font-medium">
-                                        <tr>
-                                            <th className="px-6 py-3 whitespace-nowrap">Student</th>
-                                            <th className="px-6 py-3 whitespace-nowrap">Current Hostel</th>
-                                            <th className="px-6 py-3 whitespace-nowrap">Requested</th>
-                                            <th className="px-6 py-3 whitespace-nowrap">Reason</th>
-                                            <th className="px-6 py-3 whitespace-nowrap">Status</th>
-                                            <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {transferRequests.map(req => (
-                                            <tr key={req.id}>
-                                                <td className="px-6 py-4">
-                                                    <div className="font-medium text-gray-900">{req.studentName}</div>
+                            <>
+                                {/* Mobile Card View */}
+                                <div className="md:hidden divide-y divide-gray-100">
+                                    {transferRequests.map(req => (
+                                        <div key={req.id} className="p-4 space-y-3">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <div className="font-bold text-gray-900">{req.studentName}</div>
                                                     <div className="text-xs text-gray-500 font-mono">{req.regNo}</div>
-                                                </td>
-                                                <td className="px-6 py-4">{req.currentHostel}</td>
-                                                <td className="px-6 py-4 font-medium text-[#991B1B]">{req.requestedHostel}</td>
-                                                <td className="px-6 py-4 max-w-xs truncate" title={req.reason}>{req.reason}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${req.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                                                        req.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                                                            'bg-red-100 text-red-700'
-                                                        }`}>
-                                                        {req.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    {req.status === 'Pending' && (
-                                                        <div className="flex justify-end gap-2">
-                                                            <button onClick={() => onAction(req.id, 'Rejected')} className="text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><XCircle size={18} /></button>
-                                                            <button onClick={() => onAction(req.id, 'Approved')} className="text-green-600 hover:bg-green-50 p-1.5 rounded transition-colors"><CheckCircle size={18} /></button>
-                                                        </div>
-                                                    )}
-                                                </td>
+                                                </div>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${req.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                    req.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                                        'bg-red-100 text-red-700'
+                                                    }`}>
+                                                    {req.status}
+                                                </span>
+                                            </div>
+
+                                            <div className="text-sm bg-gray-50 p-3 rounded-lg space-y-2">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-500">Current:</span>
+                                                    <span className="font-medium text-gray-900">{req.currentHostel}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-500">Requested:</span>
+                                                    <span className="font-medium text-[#991B1B]">{req.requestedHostel}</span>
+                                                </div>
+                                                <div className="pt-2 border-t border-gray-200 mt-2">
+                                                    <span className="text-gray-500 block mb-1 text-xs uppercase">Reason</span>
+                                                    <p className="text-gray-700 italic">"{req.reason}"</p>
+                                                </div>
+                                            </div>
+
+                                            {req.status === 'Pending' && (
+                                                <div className="flex gap-2 pt-2">
+                                                    <button onClick={() => onAction(req.id, 'Rejected')} className="flex-1 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-red-50">Reject</button>
+                                                    <button onClick={() => onAction(req.id, 'Approved')} className="flex-1 bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 shadow-sm">Approve</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Desktop Table View */}
+                                <div className="hidden md:block overflow-x-auto">
+                                    <table className="w-full text-left text-sm text-gray-600">
+                                        <thead className="bg-gray-50 text-gray-900 font-medium">
+                                            <tr>
+                                                <th className="px-6 py-3 whitespace-nowrap">Student</th>
+                                                <th className="px-6 py-3 whitespace-nowrap">Current Hostel</th>
+                                                <th className="px-6 py-3 whitespace-nowrap">Requested</th>
+                                                <th className="px-6 py-3 whitespace-nowrap">Reason</th>
+                                                <th className="px-6 py-3 whitespace-nowrap">Status</th>
+                                                <th className="px-6 py-3 text-right whitespace-nowrap">Actions</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {transferRequests.map(req => (
+                                                <tr key={req.id}>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-medium text-gray-900">{req.studentName}</div>
+                                                        <div className="text-xs text-gray-500 font-mono">{req.regNo}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">{req.currentHostel}</td>
+                                                    <td className="px-6 py-4 font-medium text-[#991B1B]">{req.requestedHostel}</td>
+                                                    <td className="px-6 py-4 max-w-xs truncate" title={req.reason}>{req.reason}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${req.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                            req.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                                                'bg-red-100 text-red-700'
+                                                            }`}>
+                                                            {req.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        {req.status === 'Pending' && (
+                                                            <div className="flex justify-end gap-2">
+                                                                <button onClick={() => onAction(req.id, 'Rejected')} className="text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><XCircle size={18} /></button>
+                                                                <button onClick={() => onAction(req.id, 'Approved')} className="text-green-600 hover:bg-green-50 p-1.5 rounded transition-colors"><CheckCircle size={18} /></button>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>
@@ -1181,66 +1229,71 @@ const ApplicantDetailsModal = ({ applicant, onClose }) => {
     if (!applicant) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
-                <div className="bg-[#991B1B] px-6 py-4 flex justify-between items-center text-white">
-                    <h3 className="text-lg font-bold">Applicant Details</h3>
-                    <button onClick={onClose} className="hover:bg-white/20 p-1 rounded-full"><X size={20} /></button>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="bg-[#991B1B] px-6 py-4 flex justify-between items-center text-white shrink-0">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                        <User size={20} className="text-red-200" />
+                        Applicant Details
+                    </h3>
+                    <button onClick={onClose} className="hover:bg-white/20 p-1 rounded-full transition-colors"><X size={20} /></button>
                 </div>
 
-                <div className="p-6">
+                <div className="p-6 overflow-y-auto">
                     <div className="flex flex-col md:flex-row gap-6 items-start">
                         {/* Profile Photo */}
                         <div className="flex-shrink-0 mx-auto md:mx-0">
-                            <div className="w-32 h-32 rounded-full border-4 border-gray-100 shadow-sm overflow-hidden bg-gray-50 flex items-center justify-center">
+                            <div className="w-28 h-28 rounded-full border-4 border-gray-100 shadow-sm overflow-hidden bg-gray-50 flex items-center justify-center">
                                 {applicant.profileImage ? (
                                     <img src={applicant.profileImage} alt={applicant.name} className="w-full h-full object-cover" />
                                 ) : (
-                                    <Users size={48} className="text-gray-300" />
+                                    <Users size={40} className="text-gray-300" />
                                 )}
                             </div>
                         </div>
 
                         {/* Details */}
-                        <div className="flex-1 w-full space-y-4">
-                            <div>
+                        <div className="flex-1 w-full space-y-6">
+                            <div className="text-center md:text-left">
                                 <h2 className="text-2xl font-bold text-gray-900">{applicant.name}</h2>
-                                <p className="text-gray-500 font-mono">{applicant.regNo}</p>
+                                <p className="text-gray-500 font-mono text-sm bg-gray-100 inline-block px-2 py-0.5 rounded mt-1">{applicant.regNo}</p>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                    <p className="text-xs text-gray-500 uppercase">Department</p>
-                                    <p className="font-medium">{applicant.department}</p>
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Department</p>
+                                    <p className="font-medium text-gray-900">{applicant.department}</p>
                                 </div>
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                    <p className="text-xs text-gray-500 uppercase">Year</p>
-                                    <p className="font-medium">{applicant.year}</p>
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Year</p>
+                                    <p className="font-medium text-gray-900">{applicant.year}</p>
                                 </div>
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                    <p className="text-xs text-gray-500 uppercase">Gender</p>
-                                    <p className="font-medium">{applicant.gender || 'N/A'}</p>
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Gender</p>
+                                    <p className="font-medium text-gray-900">{applicant.gender || 'N/A'}</p>
                                 </div>
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                    <p className="text-xs text-gray-500 uppercase">Email</p>
-                                    <p className="font-medium truncate" title={applicant.email}>{applicant.email}</p>
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Phone</p>
+                                    <p className="font-medium text-gray-900">{applicant.phone}</p>
                                 </div>
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                    <p className="text-xs text-gray-500 uppercase">Phone</p>
-                                    <p className="font-medium">{applicant.phone}</p>
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 sm:col-span-2">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Email Address</p>
+                                    <p className="font-medium text-gray-900 break-all">{applicant.email}</p>
                                 </div>
                             </div>
 
-                            <div className="border-t border-gray-100 pt-4">
-                                <h4 className="text-sm font-bold text-gray-900 mb-2">Guardian Info</h4>
+                            <div className="border-t border-gray-100 pt-5">
+                                <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                    <Home size={16} className="text-gray-400" /> Guardian Info
+                                </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase">Guardian Name</p>
-                                        <p className="font-medium">{applicant.parentName}</p>
+                                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Guardian Name</p>
+                                        <p className="font-medium text-gray-900">{applicant.parentName}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase">Guardian Phone</p>
-                                        <p className="font-medium">{applicant.parentPhone}</p>
+                                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Guardian Phone</p>
+                                        <p className="font-medium text-gray-900">{applicant.parentPhone}</p>
                                     </div>
                                 </div>
                             </div>
@@ -1248,8 +1301,8 @@ const ApplicantDetailsModal = ({ applicant, onClose }) => {
                     </div>
                 </div>
 
-                <div className="bg-gray-50 px-6 py-4 flex justify-end">
-                    <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors">Close</button>
+                <div className="bg-gray-50 px-6 py-4 flex justify-end shrink-0 border-t border-gray-100">
+                    <button onClick={onClose} className="px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm">Close</button>
                 </div>
             </div>
         </div>
