@@ -24,13 +24,13 @@ export const statsData = [
 export const announcements = [];
 
 export const hostels = [
-    { id: 1, name: "St Thomas Hostel", description: "Boys Hostel. Comfortable stay with study halls.", totalRooms: 50, availableRooms: 50, image: "/hostels/St Thomas Hostel.png", type: "Boys", facilities: ["Study Hall", "Wi-Fi", "Indoor Games", "24/7 Water"] },
-    { id: 2, name: "St Berchmans Hostel", description: "Boys Hostel. Spacious rooms and recreational areas.", totalRooms: 60, availableRooms: 60, image: "/hostels/St Berchmans Hostel.png", type: "Boys", facilities: ["Gym", "Wi-Fi", "TV Room", "Spacious Garden"] },
-    { id: 3, name: "Sahrudaya Hostel", description: "Boys Hostel. Focus on community and academic excellence.", totalRooms: 45, availableRooms: 45, image: "/hostels/Sahrudaya Hostel.png", type: "Boys", facilities: ["Library", "Wi-Fi", "Prayer Hall", "Mess Hall"] },
-    { id: 4, name: "St Joseph’s Hostel", description: "Boys Hostel. Modern facilities and close to library.", totalRooms: 55, availableRooms: 55, image: "/hostels/St Joseph’s Hostel.png", type: "Boys", facilities: ["Attached Bathrooms", "Wi-Fi", "Canteen", "Laundry"] },
-    { id: 5, name: "St Thomas Moore Hostel", description: "Boys Hostel. Peaceful environment for focused students.", totalRooms: 40, availableRooms: 40, image: "/hostels/St Thomas Moore Hostel.png", type: "Boys" },
-    { id: 6, name: "Pope John Paul II Hostel", description: "Boys Hostel. Newly renovated with premium amenities.", totalRooms: 70, availableRooms: 70, image: null, type: "Boys" },
-    { id: 7, name: "St Mary’s Hostel", description: "Girls Hostel. Safe, secure, and homely atmosphere.", totalRooms: 80, availableRooms: 80, image: "/hostels/St Mary’s Hostel.png", type: "Girls", facilities: ["Security 24/7", "Wi-Fi", "Study Area", "Recreation Room"] },
+    { id: 1, name: "St Thomas Hostel", description: "Boys Hostel. Comfortable stay with study halls.", totalRooms: 50, availableRooms: 50, totalBeds: 100, availableBeds: 85, totalBathrooms: 15, image: "/hostels/St Thomas Hostel.png", type: "Boys", facilities: ["Study Hall", "Wi-Fi", "Indoor Games", "24/7 Water"] },
+    { id: 2, name: "St Berchmans Hostel", description: "Boys Hostel. Spacious rooms and recreational areas.", totalRooms: 60, availableRooms: 60, totalBeds: 120, availableBeds: 100, totalBathrooms: 20, image: "/hostels/St Berchmans Hostel.png", type: "Boys", facilities: ["Gym", "Wi-Fi", "TV Room", "Spacious Garden"] },
+    { id: 3, name: "Sahrudaya Hostel", description: "Boys Hostel. Focus on community and academic excellence.", totalRooms: 45, availableRooms: 45, totalBeds: 90, availableBeds: 70, totalBathrooms: 12, image: "/hostels/Sahrudaya Hostel.png", type: "Boys", facilities: ["Library", "Wi-Fi", "Prayer Hall", "Mess Hall"] },
+    { id: 4, name: "St Joseph’s Hostel", description: "Boys Hostel. Modern facilities and close to library.", totalRooms: 55, availableRooms: 55, totalBeds: 110, availableBeds: 95, totalBathrooms: 18, image: "/hostels/St Joseph’s Hostel.png", type: "Boys", facilities: ["Attached Bathrooms", "Wi-Fi", "Canteen", "Laundry"] },
+    { id: 5, name: "St Thomas Moore Hostel", description: "Boys Hostel. Peaceful environment for focused students.", totalRooms: 40, availableRooms: 40, totalBeds: 80, availableBeds: 60, totalBathrooms: 10, image: "/hostels/St Thomas Moore Hostel.png", type: "Boys" },
+    { id: 6, name: "Pope John Paul II Hostel", description: "Boys Hostel. Newly renovated with premium amenities.", totalRooms: 70, availableRooms: 70, totalBeds: 140, availableBeds: 130, totalBathrooms: 25, image: null, type: "Boys" },
+    { id: 7, name: "St Mary’s Hostel", description: "Girls Hostel. Safe, secure, and homely atmosphere.", totalRooms: 80, availableRooms: 80, totalBeds: 160, availableBeds: 150, totalBathrooms: 30, image: "/hostels/St Mary’s Hostel.png", type: "Girls", facilities: ["Security 24/7", "Wi-Fi", "Study Area", "Recreation Room"] },
 ];
 
 export const rooms = [];

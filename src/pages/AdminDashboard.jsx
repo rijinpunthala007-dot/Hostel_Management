@@ -457,6 +457,7 @@ const AdminDashboard = () => {
                         <form onSubmit={(e) => {
                             e.preventDefault();
                             const formData = new FormData(e.target);
+                            const facilitiesInput = formData.get('facilities');
                             const facilitiesList = facilitiesInput ? facilitiesInput.split(',').map(f => f.trim()).filter(f => f) : [];
 
                             const roomImagesInput = formData.get('roomImages');
@@ -468,8 +469,11 @@ const AdminDashboard = () => {
                             const hostelData = {
                                 id: editingHostel ? editingHostel.id : hostelList.length + 1,
                                 name: formData.get('name'),
-                                totalRooms: parseInt(formData.get('totalRooms')),
-                                availableRooms: editingHostel ? editingHostel.availableRooms : parseInt(formData.get('totalRooms')), // Default to total
+                                totalRooms: parseInt(formData.get('totalRooms')) || 0,
+                                availableRooms: parseInt(formData.get('availableRooms')) || 0,
+                                totalBeds: parseInt(formData.get('totalBeds')) || 0,
+                                availableBeds: parseInt(formData.get('availableBeds')) || 0,
+                                totalBathrooms: parseInt(formData.get('totalBathrooms')) || 0,
                                 description: formData.get('description'),
                                 image: formData.get('image'),
                                 facilities: facilitiesList,
@@ -503,6 +507,22 @@ const AdminDashboard = () => {
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Total Rooms</label>
                                         <input required name="totalRooms" defaultValue={editingHostel?.totalRooms} type="number" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="e.g. 50" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Free Rooms</label>
+                                        <input required name="availableRooms" defaultValue={editingHostel?.availableRooms} type="number" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="e.g. 5" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Total Beds</label>
+                                        <input required name="totalBeds" defaultValue={editingHostel?.totalBeds} type="number" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="e.g. 100" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Free Beds</label>
+                                        <input required name="availableBeds" defaultValue={editingHostel?.availableBeds} type="number" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="e.g. 10" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Total Bathrooms</label>
+                                        <input required name="totalBathrooms" defaultValue={editingHostel?.totalBathrooms} type="number" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="e.g. 20" />
                                     </div>
                                 </div>
                                 <div>
@@ -697,24 +717,28 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
                                         <button onClick={() => onDelete(student.id)} className="p-2 text-red-600 bg-red-50 rounded-full" title="Delete"><Trash2 size={16} /></button>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-y-2 text-sm">
-                                    <div className="text-gray-500">Hostel:</div>
-                                    <div className="text-gray-900 font-medium">{student.hostel}</div>
-
-                                    <div className="text-gray-500">Room:</div>
-                                    <div className="text-gray-900 font-medium">{student.room}</div>
-
-                                    <div className="text-gray-500">Fee Status:</div>
-                                    <div>
-                                        {student.feeDue > 0 ? (
-                                            <span className="inline-block bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-medium">
-                                                Due: ₹{student.feeDue}
-                                            </span>
-                                        ) : (
-                                            <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
-                                                Paid
-                                            </span>
-                                        )}
+                                <div className="space-y-2 text-sm mt-2 bg-gray-50 p-3 rounded-lg">
+                                    <div className="flex justify-between border-b border-gray-200 pb-2">
+                                        <span className="text-gray-500">Hostel:</span>
+                                        <span className="text-gray-900 font-medium text-right">{student.hostel}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-gray-200 pb-2">
+                                        <span className="text-gray-500">Room:</span>
+                                        <span className="text-gray-900 font-medium">{student.room}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-1">
+                                        <span className="text-gray-500">Fee Status:</span>
+                                        <div>
+                                            {student.feeDue > 0 ? (
+                                                <span className="inline-block bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-medium">
+                                                    Due: ₹{student.feeDue}
+                                                </span>
+                                            ) : (
+                                                <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
+                                                    Paid
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -727,7 +751,7 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
                 </div>
 
                 {/* Desktop Table View */}
-                <div className="hidden md:block overflow-x-auto">
+                < div className="hidden md:block overflow-x-auto" >
                     <table className="w-full text-left text-sm text-gray-600">
                         <thead className="bg-gray-50 text-gray-900 font-medium">
                             <tr>
@@ -816,14 +840,30 @@ const HostelManage = ({ hostels, onDelete, onAdd, onEdit }) => (
                         </div>
                     )}
 
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Total Rooms:</span>
-                            <span className="font-medium">{hostel.totalRooms}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Available:</span>
-                            <span className="font-medium text-green-600">{hostel.availableRooms}</span>
+                    <div className="space-y-2 mt-4 pt-4 border-t border-gray-100">
+                        <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Rooms:</span>
+                                <span className="font-medium text-gray-900">{hostel.totalRooms}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Free Rooms:</span>
+                                <span className={`font-medium ${hostel.availableRooms > 0 ? 'text-green-600' : 'text-red-500'}`}>{hostel.availableRooms}</span>
+                            </div>
+
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Beds:</span>
+                                <span className="font-medium text-gray-900">{hostel.totalBeds || '-'}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Free Beds:</span>
+                                <span className={`font-medium ${hostel.availableBeds > 0 ? 'text-green-600' : 'text-red-500'}`}>{hostel.availableBeds || '-'}</span>
+                            </div>
+
+                            <div className="flex justify-between text-sm col-span-2">
+                                <span className="text-gray-500">Bathrooms:</span>
+                                <span className="font-medium text-gray-900">{hostel.totalBathrooms || '-'}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

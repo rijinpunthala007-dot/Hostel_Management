@@ -152,13 +152,31 @@ const HostelSelection = () => {
                                         {hostel.description}
                                     </p>
 
-                                    <div className="flex justify-between items-center text-sm text-gray-500 mb-6 mt-auto">
-                                        <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                            {hostel.totalRooms} Total Rooms
-                                        </span>
-                                        <span className={`px-2 py-1 rounded ${hostel.availableRooms > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                            {hostel.availableRooms} Available
-                                        </span>
+                                    <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm text-gray-500 mb-6 mt-auto bg-gray-50 p-3 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                            <span>Rooms:</span>
+                                            <span className="font-semibold text-gray-700">{hostel.totalRooms}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span>Free Rooms:</span>
+                                            <span className={`font-semibold ${hostel.availableRooms > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {hostel.availableRooms}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span>Beds:</span>
+                                            <span className="font-semibold text-gray-700">{hostel.totalBeds}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span>Free Beds:</span>
+                                            <span className={`font-semibold ${hostel.availableBeds > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {hostel.availableBeds}
+                                            </span>
+                                        </div>
+                                        <div className="col-span-2 flex items-center justify-between border-t border-gray-200 pt-2 mt-1">
+                                            <span>Bathrooms:</span>
+                                            <span className="font-semibold text-gray-700">{hostel.totalBathrooms}</span>
+                                        </div>
                                     </div>
 
                                     {/* Action Button Logic */}

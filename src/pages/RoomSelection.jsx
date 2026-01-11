@@ -113,7 +113,10 @@ const RoomSelection = () => {
 
                                     <div className="mt-auto">
                                         {room.available ? (
-                                            <button className="w-full bg-[#991B1B] text-white py-2 rounded-lg font-medium hover:bg-red-800 transition-colors">
+                                            <button
+                                                onClick={() => alert(`Application for Room ${room.number} sent!`)}
+                                                className="w-full bg-[#991B1B] text-white py-2 rounded-lg font-medium hover:bg-red-800 transition-colors"
+                                            >
                                                 Apply Now
                                             </button>
                                         ) : (
