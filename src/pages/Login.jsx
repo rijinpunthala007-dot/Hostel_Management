@@ -113,7 +113,7 @@ const Login = () => {
                                 onChange={handleChange}
                                 type="password"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#991B1B] focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                                placeholder={activeTab === 'admin' ? "••••••••" : "Optional"}
+                                placeholder={activeTab === 'admin' ? "••••••••" : "••••••••"}
                             />
                             <div className="flex justify-end mt-2">
                                 <a href="#" className="text-sm font-medium text-[#991B1B] hover:text-red-800">
