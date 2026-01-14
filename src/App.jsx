@@ -11,6 +11,8 @@ import LeaveApplication from './pages/LeaveApplication';
 import ComplaintSubmission from './pages/ComplaintSubmission';
 import HostelRules from './pages/HostelRules';
 import StudentProfile from './pages/StudentProfile';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -51,7 +53,10 @@ function App() {
                     <Route path="/leave-application" element={<LeaveApplication />} />
                     <Route path="/complaints" element={<ComplaintSubmission />} />
                     <Route path="/rules" element={<HostelRules />} />
+                    <Route path="/rules" element={<HostelRules />} />
                     <Route path="/profile" element={<StudentProfile />} />
+                    <Route path="/terms" element={<TermsOfService />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="*" element={<Login />} />
                 </Routes>
             </ErrorBoundary>

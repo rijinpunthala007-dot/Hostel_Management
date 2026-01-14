@@ -1,16 +1,51 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
     const [activeTab, setActiveTab] = useState('student');
+    const [credentials, setCredentials] = useState({ identifier: '', password: '' });
     const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setCredentials({ ...credentials, [e.target.name]: e.target.value });
+    };
 
     const handleLogin = (e) => {
         e.preventDefault();
-        if (activeTab === 'student') {
-            navigate('/student-dashboard');
+        const { identifier, password } = credentials;
+
+        if (activeTab === 'admin') {
+            // Admin Validation (Strict)
+            if (identifier === 'admin@college.com' && password === 'admin123') {
+                navigate('/admin-dashboard');
+            } else {
+                alert('Invalid Admin Credentials! (Use: admin@college.com / admin123)');
+            }
         } else {
-            navigate('/admin-dashboard');
+            // Student Validation (Bypass Password only)
+            // Must have a valid RegNo (registered user)
+            if (!identifier) {
+                alert('Please enter your Registration Number!');
+                return;
+            }
+
+            const storedStudents = localStorage.getItem('studentList');
+            if (storedStudents) {
+                const students = JSON.parse(storedStudents);
+                const student = students.find(s => s.regNo === identifier || s.email === identifier);
+
+                if (student) {
+                    // Bypass Password Check: Success if Identity Valid
+                    const sessionUser = { ...student };
+                    delete sessionUser.password;
+                    localStorage.setItem('userData', JSON.stringify(sessionUser));
+                    navigate('/student-dashboard');
+                } else {
+                    alert('Student Record Not Found! Please Register first.');
+                }
+            } else {
+                alert('Database Error: No Student List Found.');
+            }
         }
     };
 
@@ -36,7 +71,7 @@ const Login = () => {
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-500 hover:text-gray-700'
                                 }`}
-                            onClick={() => setActiveTab('student')}
+                            onClick={() => { setActiveTab('student'); setCredentials({ identifier: '', password: '' }); }}
                         >
                             Student Login
                         </button>
@@ -45,7 +80,7 @@ const Login = () => {
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-500 hover:text-gray-700'
                                 }`}
-                            onClick={() => setActiveTab('admin')}
+                            onClick={() => { setActiveTab('admin'); setCredentials({ identifier: '', password: '' }); }}
                         >
                             Admin Access
                         </button>
@@ -58,9 +93,13 @@ const Login = () => {
                                 {activeTab === 'student' ? "Register Number" : "Email Address"}
                             </label>
                             <input
+                                required
+                                name="identifier"
+                                value={credentials.identifier}
+                                onChange={handleChange}
                                 type={activeTab === 'student' ? "text" : "email"}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#991B1B] focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                                placeholder={activeTab === 'student' ? "Enter your Reg No" : "Enter your email"}
+                                placeholder={activeTab === 'student' ? "Enter your Reg No" : "admin@college.com"}
                             />
                         </div>
                         <div>
@@ -68,9 +107,13 @@ const Login = () => {
                                 Password
                             </label>
                             <input
+                                required={activeTab === 'admin'}
+                                name="password"
+                                value={credentials.password}
+                                onChange={handleChange}
                                 type="password"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#991B1B] focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                                placeholder="••••••••"
+                                placeholder={activeTab === 'admin' ? "••••••••" : "Optional"}
                             />
                             <div className="flex justify-end mt-2">
                                 <a href="#" className="text-sm font-medium text-[#991B1B] hover:text-red-800">
@@ -103,9 +146,9 @@ const Login = () => {
 
                     <div className="mt-8 text-center text-sm text-gray-500">
                         By signing in, you agree to our{' '}
-                        <a href="#" className="font-medium text-gray-900 hover:underline">Terms of Service</a>
+                        <Link to="/terms" className="font-medium text-gray-900 hover:underline">Terms of Service</Link>
                         {' '}and{' '}
-                        <a href="#" className="font-medium text-gray-900 hover:underline">Privacy Policy</a>
+                        <Link to="/privacy" className="font-medium text-gray-900 hover:underline">Privacy Policy</Link>
                     </div>
                 </div>
             </div>

@@ -26,6 +26,11 @@ const StudentRegistration = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        if (formData.password.length < 8) {
+            alert("Password must be at least 8 characters long.");
+            return;
+        }
+
         if (formData.password !== formData.confirmPassword) {
             alert("Passwords do not match!");
             return;
@@ -47,6 +52,7 @@ const StudentRegistration = () => {
         // Create new user object
         const newUser = {
             ...formData,
+            id: Date.now(), // Ensure unique ID
             hostelName: null,
             roomNumber: null,
             roomType: null,
@@ -54,13 +60,31 @@ const StudentRegistration = () => {
             status: 'Pending_Hostel' // Initial Status
         };
 
-        // Remove passwords
-        delete newUser.password;
-        delete newUser.confirmPassword;
+        // Prepare session user (remove sensitive data)
+        const sessionUser = { ...newUser };
+        delete sessionUser.password;
+        delete sessionUser.confirmPassword;
 
         try {
-            // Save to localStorage
-            localStorage.setItem('userData', JSON.stringify(newUser));
+            // 1. Save to Session (Auto-login after registration)
+            localStorage.setItem('userData', JSON.stringify(sessionUser));
+
+            // 2. Save to Master Student List (Persistence for future Logins)
+            // We keep the password in 'studentList' for validation. In production, hash this!
+            const studentToSave = { ...newUser };
+            delete studentToSave.confirmPassword; // Don't need this
+
+            const updatedStudentList = [...existingStudents, studentToSave];
+            localStorage.setItem('studentList', JSON.stringify(updatedStudentList));
+
+            // CLEANUP: Remove any old hostel requests for this regNo to prevent phantom pending requests
+            const storedRequests = localStorage.getItem('hostelChangeRequests');
+            if (storedRequests) {
+                const allRequests = JSON.parse(storedRequests);
+                // Filter out any requests associated with this regNo from previous sessions
+                const cleanedRequests = allRequests.filter(req => req.regNo !== newUser.regNo);
+                localStorage.setItem('hostelChangeRequests', JSON.stringify(cleanedRequests));
+            }
 
             alert("Registration Successful! Please proceed to select a hostel.");
             navigate('/hostels');
@@ -96,7 +120,7 @@ const StudentRegistration = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                <input required name="name" onChange={handleChange} type="text" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="e.g. Rahul Kumar" />
+                                <input required name="name" onChange={handleChange} type="text" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="Enter Full Name" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
@@ -109,7 +133,7 @@ const StudentRegistration = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
-                                <input required name="regNo" onChange={handleChange} type="text" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="e.g. CS2023001" />
+                                <input required name="regNo" onChange={handleChange} type="text" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="eg.12412760" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
@@ -190,7 +214,7 @@ const StudentRegistration = () => {
                                     }}
                                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-[#991B1B] hover:file:bg-red-100 cursor-pointer"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Recommended: Square JPG/PNG, max 1MB</p>
+                                <p className="text-xs text-gray-500 mt-1">Recommended: Square JPG/PNG, max 500KB</p>
                             </div>
                         </div>
                     </div>
@@ -201,11 +225,11 @@ const StudentRegistration = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                                <input required name="password" onChange={handleChange} type="password" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="••••••••" />
+                                <input required minLength="8" name="password" onChange={handleChange} type="password" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="••••••••" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                                <input required name="confirmPassword" onChange={handleChange} type="password" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="••••••••" />
+                                <input required minLength="8" name="confirmPassword" onChange={handleChange} type="password" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="••••••••" />
                             </div>
                         </div>
                     </div>

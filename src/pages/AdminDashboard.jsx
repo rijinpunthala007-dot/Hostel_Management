@@ -13,7 +13,14 @@ const AdminDashboard = () => {
         const saved = localStorage.getItem('studentList');
         return saved ? JSON.parse(saved) : allStudents;
     });
-    const [hostelList, setHostelList] = useState(hostels);
+    const [hostelList, setHostelList] = useState(() => {
+        const saved = localStorage.getItem('hostelData');
+        return saved ? JSON.parse(saved) : hostels;
+    });
+
+    React.useEffect(() => {
+        localStorage.setItem('hostelData', JSON.stringify(hostelList));
+    }, [hostelList]);
     const [noticeList, setNoticeList] = useState(() => {
         const saved = localStorage.getItem('announcements');
         return saved ? JSON.parse(saved) : initialAnnouncements;
@@ -53,28 +60,44 @@ const AdminDashboard = () => {
             return req;
         });
 
-        if (action === 'Approved') {
-            // Find request details
-            const request = changeRequests.find(r => r.id === id);
+        const request = changeRequests.find(r => r.id === id);
 
+        if (action === 'Approved') {
             // Handle New Allocation (Add to Student List)
+            // Handle New Allocation (Update Student List)
             if (request && request.type === 'Allocation') {
-                const newStudent = {
-                    id: students.length + 1,
-                    name: request.studentName,
-                    regNo: request.regNo,
-                    department: request.studentDetails?.department || 'N/A',
-                    year: request.studentDetails?.year || '1st Year',
-                    email: request.studentDetails?.email || 'N/A',
-                    phone: request.studentDetails?.phone || 'N/A',
-                    parentName: request.studentDetails?.parentName || 'N/A',
-                    parentPhone: request.studentDetails?.parentPhone || 'N/A',
-                    hostel: request.requestedHostel,
-                    room: "Allocated", // In real app, assign specific room
-                    status: 'Active',
-                    feeDue: 0
-                };
-                setStudents([...students, newStudent]);
+                const existingStudentIndex = students.findIndex(s => s.regNo === request.regNo);
+
+                if (existingStudentIndex !== -1) {
+                    // Update existing student
+                    const updatedStudents = [...students];
+                    updatedStudents[existingStudentIndex] = {
+                        ...updatedStudents[existingStudentIndex],
+                        hostel: request.requestedHostel,
+                        room: "Allocated", // In real app, assign specific room
+                        status: 'Active',
+                        feeDue: 0
+                    };
+                    setStudents(updatedStudents);
+                } else {
+                    // Create new student (fallback)
+                    const newStudent = {
+                        id: students.length + 1,
+                        name: request.studentName,
+                        regNo: request.regNo,
+                        department: request.studentDetails?.department || 'N/A',
+                        year: request.studentDetails?.year || '1st Year',
+                        email: request.studentDetails?.email || 'N/A',
+                        phone: request.studentDetails?.phone || 'N/A',
+                        parentName: request.studentDetails?.parentName || 'N/A',
+                        parentPhone: request.studentDetails?.parentPhone || 'N/A',
+                        hostel: request.requestedHostel,
+                        room: "Allocated",
+                        status: 'Active',
+                        feeDue: 0
+                    };
+                    setStudents([...students, newStudent]);
+                }
             }
 
             // Update User Data in Local Storage (simulating DB update for the logged in user)
@@ -82,12 +105,42 @@ const AdminDashboard = () => {
             if (storedUser) {
                 const user = JSON.parse(storedUser);
                 // Only update if this request matches the logged in user (mock logic)
-                // In a real app, we would update the specific student record in DB
                 if (user.name === request.studentName || true) { // Simulating for current user
                     user.hostelName = request.requestedHostel;
                     user.roomNumber = "Allocated"; // Reset room
                     user.roomType = "Pending"; // Reset type
                     user.status = 'Allocated'; // Update status
+                    localStorage.setItem('userData', JSON.stringify(user));
+                }
+            }
+
+            // Update Hostel Occupancy
+            const updatedHostels = hostelList.map(h => {
+                if (h.name === request.requestedHostel) {
+                    return {
+                        ...h,
+                        availableRooms: Math.max(0, h.availableRooms - 1),
+                        availableBeds: Math.max(0, h.availableBeds - 1)
+                    };
+                }
+                return h;
+            });
+            setHostelList(updatedHostels);
+        } else if (action === 'Rejected') {
+            // Revert User Data Status
+            const storedUser = localStorage.getItem('userData');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                // Only update if this request matches the logged in user
+                if (user.name === request.studentName || true) { // Simulating for current user
+                    if (request.type === 'Allocation') {
+                        user.status = 'Pending_Hostel'; // Revert to initial state
+                        user.hostelName = null; // Clear pending allocation
+                    } else {
+                        user.status = 'Active'; // Revert to active state
+                        // currentHostel should already be correct, but just to be safe:
+                        user.hostelName = request.currentHostel;
+                    }
                     localStorage.setItem('userData', JSON.stringify(user));
                 }
             }

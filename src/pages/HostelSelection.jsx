@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Building, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Building, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import { hostels } from '../mockData';
 
 const HostelSelection = () => {
@@ -27,10 +27,52 @@ const HostelSelection = () => {
     const [showDetailsModal, setShowDetailsModal] = React.useState(false);
     const [selectedHostel, setSelectedHostel] = React.useState(null);
     const [transferReason, setTransferReason] = React.useState('');
+    const [hostelList, setHostelList] = React.useState([]); // Dynamic Hostel List
+    const [rejectedRequest, setRejectedRequest] = React.useState(null); // Rejection State
 
-    // Check if user has ANY pending request
-    const pendingRequest = requests.find(r => r.status === 'Pending' &&
-        (r.regNo === user?.regNo || r.studentName === user?.name));
+    React.useEffect(() => {
+        // Load Hostels (Dynamic)
+        const storedHostels = localStorage.getItem('hostelData');
+        if (storedHostels) {
+            setHostelList(JSON.parse(storedHostels));
+        } else {
+            setHostelList(hostels); // Fallback to mock
+        }
+
+        // Check for Rejections
+        const storedRequests = localStorage.getItem('hostelChangeRequests');
+        if (storedRequests) {
+            const allRequests = JSON.parse(storedRequests);
+            const rejection = allRequests.find(r =>
+                r.regNo === user?.regNo &&
+                r.studentName === user?.name &&
+                r.status === 'Rejected'
+            );
+            if (rejection) {
+                setRejectedRequest(rejection);
+            }
+        }
+    }, [user]);
+
+    // Check if user has ANY active pending request (excluding rejected/dismissed ones)
+    // Use strict matching: BOTH regNo AND name must match to avoid false positives from old data
+    const pendingRequest = requests.find(r =>
+        (r.status === 'Pending' || r.status === 'Approved') &&
+        r.regNo === user?.regNo && r.studentName === user?.name);
+
+    const dismissRejection = () => {
+        if (!rejectedRequest) return;
+
+        const storedRequests = localStorage.getItem('hostelChangeRequests');
+        if (storedRequests) {
+            const allRequests = JSON.parse(storedRequests);
+            // Mark as 'RejectedSeen' so it doesn't show again
+            const updated = allRequests.map(r => r.id === rejectedRequest.id ? { ...r, status: 'RejectedSeen' } : r);
+            localStorage.setItem('hostelChangeRequests', JSON.stringify(updated));
+            setRequests(updated); // Update local state
+            setRejectedRequest(null);
+        }
+    };
 
     const handleRequest = (hostel) => {
         if (!user) return;
@@ -101,6 +143,28 @@ const HostelSelection = () => {
             </nav>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Rejection Banner */}
+                {rejectedRequest && (
+                    <div className="mb-8 bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg flex items-center gap-3 animate-fade-in relative">
+                        <div className="bg-red-100 p-2 rounded-full">
+                            <AlertCircle size={20} />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-bold">Request Rejected</h3>
+                            <p className="text-sm">
+                                Your request for <span className="font-semibold">{rejectedRequest.requestedHostel}</span> was rejected.
+                                {rejectedRequest.reason && <span> Reason: {rejectedRequest.reason}</span>}
+                            </p>
+                        </div>
+                        <button
+                            onClick={dismissRejection}
+                            className="bg-white text-red-700 px-3 py-1 rounded border border-red-200 text-sm font-medium hover:bg-red-50"
+                        >
+                            Dismiss
+                        </button>
+                    </div>
+                )}
+
                 {user?.status === 'Pending_Approval' && (
                     <div className="mb-8 bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg flex items-center gap-3 animate-fade-in">
                         <div className="bg-blue-100 p-2 rounded-full">
@@ -114,7 +178,7 @@ const HostelSelection = () => {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {hostels.map((hostel) => {
+                    {hostelList.map((hostel) => {
                         const isCurrentHostel = user?.hostelName === hostel.name;
                         const isThisPending = pendingRequest?.requestedHostel === hostel.name;
                         const isNewStudent = user?.status === 'Pending_Hostel';
@@ -181,9 +245,15 @@ const HostelSelection = () => {
 
                                     {/* Action Button Logic */}
                                     {isThisPending ? (
-                                        <button disabled className="w-full bg-blue-100 text-blue-700 py-3 rounded-lg font-medium cursor-not-allowed border border-blue-200">
-                                            Waiting for Approval...
-                                        </button>
+                                        pendingRequest.status === 'Approved' ? (
+                                            <button disabled className="w-full bg-green-100 text-green-700 py-3 rounded-lg font-medium cursor-not-allowed border border-green-200">
+                                                Request Approved
+                                            </button>
+                                        ) : (
+                                            <button disabled className="w-full bg-blue-100 text-blue-700 py-3 rounded-lg font-medium cursor-not-allowed border border-blue-200">
+                                                Waiting for Approval...
+                                            </button>
+                                        )
                                     ) : pendingRequest ? (
                                         <button disabled className="w-full bg-gray-100 text-gray-400 py-3 rounded-lg font-medium cursor-not-allowed border border-gray-200">
                                             Another Request Active

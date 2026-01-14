@@ -52,7 +52,7 @@ const StudentDashboard = () => {
             const requests = JSON.parse(storedRequests);
             // Check for Rejections
             const rejection = requests.find(r =>
-                (r.studentName === currentUser.name || r.regNo === currentUser.regNo) &&
+                r.regNo === currentUser.regNo && r.studentName === currentUser.name &&
                 r.status === 'Rejected'
             );
             if (rejection) {
@@ -61,7 +61,7 @@ const StudentDashboard = () => {
 
             // Check for Approvals (that haven't been seen/dismissed)
             const approval = requests.find(r =>
-                (r.studentName === currentUser.name || r.regNo === currentUser.regNo) &&
+                r.regNo === currentUser.regNo && r.studentName === currentUser.name &&
                 r.status === 'Approved'
             );
             if (approval) {

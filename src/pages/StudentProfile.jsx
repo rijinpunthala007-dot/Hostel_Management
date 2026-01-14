@@ -10,7 +10,27 @@ const StudentProfile = () => {
     React.useEffect(() => {
         const storedUser = localStorage.getItem('userData');
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            const currentUser = JSON.parse(storedUser);
+
+            // Sync with Master Student List (Admin Updates)
+            const allStudents = localStorage.getItem('studentList');
+            if (allStudents) {
+                const students = JSON.parse(allStudents);
+                const updatedData = students.find(s => s.regNo === currentUser.regNo);
+
+                if (updatedData) {
+                    // Merge master data with session data (Master takes precedence for profile fields)
+                    const mergedUser = { ...currentUser, ...updatedData };
+                    setUser(mergedUser);
+
+                    // Optional: Update session storage to reflect changes immediately
+                    localStorage.setItem('userData', JSON.stringify(mergedUser));
+                } else {
+                    setUser(currentUser);
+                }
+            } else {
+                setUser(currentUser);
+            }
         }
     }, []);
 
