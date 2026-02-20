@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { UserPlus, ArrowLeft } from 'lucide-react';
+import { UserPlus, ArrowLeft, Pencil } from 'lucide-react';
+import ImageCropModal from '../components/ImageCropModal';
 
 const StudentRegistration = () => {
     const navigate = useNavigate();
@@ -18,6 +19,8 @@ const StudentRegistration = () => {
         password: '',
         confirmPassword: ''
     });
+    const [rawImageSrc, setRawImageSrc] = useState(null);
+    const [showCropModal, setShowCropModal] = useState(false);
 
     const handleChange = (e) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -166,7 +169,7 @@ const StudentRegistration = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                <input required name="phone" onChange={handleChange} type="tel" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="+91 98765 43210" />
+                                <input required name="phone" onChange={handleChange} type="tel" className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none" placeholder="phone number" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Parent/Guardian Name</label>
@@ -183,11 +186,26 @@ const StudentRegistration = () => {
                     <div>
                         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 border-b pb-1">Profile Photo</h3>
                         <div className="flex items-center gap-4">
-                            <div className="h-16 w-16 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
-                                {formData.profileImage ? (
-                                    <img src={formData.profileImage} alt="Preview" className="h-full w-full object-cover" />
-                                ) : (
-                                    <UserPlus className="text-gray-400" size={24} />
+                            <div className="relative group">
+                                <div className="h-16 w-16 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
+                                    {formData.profileImage ? (
+                                        <img src={formData.profileImage} alt="Preview" className="h-full w-full object-cover" />
+                                    ) : (
+                                        <UserPlus className="text-gray-400" size={24} />
+                                    )}
+                                </div>
+                                {formData.profileImage && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setRawImageSrc(formData.profileImage);
+                                            setShowCropModal(true);
+                                        }}
+                                        className="absolute -bottom-1 -right-1 bg-[#991B1B] text-white p-1 rounded-full shadow-md hover:bg-red-800 transition-colors"
+                                        title="Re-crop image"
+                                    >
+                                        <Pencil size={12} />
+                                    </button>
                                 )}
                             </div>
                             <div className="flex-1">
@@ -198,23 +216,22 @@ const StudentRegistration = () => {
                                     onChange={(e) => {
                                         const file = e.target.files[0];
                                         if (file) {
-                                            // Check file size (max 500KB recommended for localStorage)
-                                            if (file.size > 500000) {
-                                                alert("File size too large! Please select an image under 500KB.");
-                                                e.target.value = ""; // Clear input
+                                            if (file.size > 2000000) {
+                                                alert("File size too large! Please select an image under 2MB.");
+                                                e.target.value = "";
                                                 return;
                                             }
-
                                             const reader = new FileReader();
                                             reader.onloadend = () => {
-                                                setFormData(prev => ({ ...prev, profileImage: reader.result }));
+                                                setRawImageSrc(reader.result);
+                                                setShowCropModal(true);
                                             };
                                             reader.readAsDataURL(file);
                                         }
                                     }}
                                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-[#991B1B] hover:file:bg-red-100 cursor-pointer"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Recommended: Square JPG/PNG, max 500KB</p>
+                                <p className="text-xs text-gray-500 mt-1">Upload a photo and crop it to fit. Max 2MB.</p>
                             </div>
                         </div>
                     </div>
@@ -246,6 +263,22 @@ const StudentRegistration = () => {
                         <Link to="/" className="text-[#991B1B] font-medium text-sm hover:underline">Sign In</Link>
                     </div>
                 </form>
+
+                {/* Image Crop Modal */}
+                {showCropModal && rawImageSrc && (
+                    <ImageCropModal
+                        imageSrc={rawImageSrc}
+                        onCropComplete={(croppedImage) => {
+                            setFormData(prev => ({ ...prev, profileImage: croppedImage }));
+                            setShowCropModal(false);
+                            setRawImageSrc(null);
+                        }}
+                        onCancel={() => {
+                            setShowCropModal(false);
+                            setRawImageSrc(null);
+                        }}
+                    />
+                )}
             </div>
         </div>
     );

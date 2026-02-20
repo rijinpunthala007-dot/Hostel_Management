@@ -261,8 +261,12 @@ const StudentDashboard = () => {
                     {/* Profile Card */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-start justify-between mb-4">
-                            <div className="bg-red-50 p-2 rounded-full">
-                                <User className="text-[#991B1B]" size={24} />
+                            <div className="bg-red-50 p-1 rounded-full overflow-hidden w-12 h-12 flex items-center justify-center">
+                                {user.profileImage ? (
+                                    <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover rounded-full" />
+                                ) : (
+                                    <User className="text-[#991B1B]" size={24} />
+                                )}
                             </div>
                         </div>
                         <h3 className="font-semibold text-lg text-gray-900">{user.name}</h3>

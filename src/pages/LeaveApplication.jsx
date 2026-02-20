@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, FileText, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Clock, CheckCircle, XCircle, Paperclip } from 'lucide-react';
 
 const LeaveApplication = () => {
     const navigate = useNavigate();
@@ -8,6 +8,8 @@ const LeaveApplication = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [reason, setReason] = useState('');
+    const [attachedFile, setAttachedFile] = useState(null);
+    const fileInputRef = useRef(null);
 
     // Initialize from localStorage or mock data
     const [user, setUser] = useState(() => {
@@ -20,25 +22,49 @@ const LeaveApplication = () => {
         return saved ? JSON.parse(saved) : [];
     });
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setAttachedFile(file);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        const newLeave = {
-            id: Date.now(), // Use timestamp for unique ID
-            type: leaveType,
-            from: startDate,
-            to: endDate,
-            status: 'Pending',
-            reason: reason,
-            studentName: user.name,
-            regNo: user.regNo
+
+        const saveLeave = (fileData) => {
+            const newLeave = {
+                id: Date.now(),
+                type: leaveType,
+                from: startDate,
+                to: endDate,
+                status: 'Pending',
+                reason: reason,
+                studentName: user.name,
+                regNo: user.regNo,
+                attachment: fileData || null,
+                attachmentName: attachedFile ? attachedFile.name : null
+            };
+            const updatedHistory = [newLeave, ...leaveHistory];
+            setLeaveHistory(updatedHistory);
+            localStorage.setItem('leaveRequests', JSON.stringify(updatedHistory));
+            alert('Leave application submitted successfully!');
+            setReason('');
+            setStartDate('');
+            setEndDate('');
+            setAttachedFile(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         };
-        const updatedHistory = [newLeave, ...leaveHistory];
-        setLeaveHistory(updatedHistory);
-        localStorage.setItem('leaveRequests', JSON.stringify(updatedHistory));
-        alert('Leave application submitted successfully!');
-        setReason('');
-        setStartDate('');
-        setEndDate('');
+
+        if (attachedFile) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                saveLeave(reader.result);
+            };
+            reader.readAsDataURL(attachedFile);
+        } else {
+            saveLeave(null);
+        }
     };
 
     return (
@@ -116,8 +142,16 @@ const LeaveApplication = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Supporting Document (Optional)</label>
                                 <input
                                     type="file"
+                                    ref={fileInputRef}
+                                    accept="image/*,.pdf,.doc,.docx"
+                                    onChange={handleFileChange}
                                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-[#991B1B] hover:file:bg-red-100"
                                 />
+                                {attachedFile && (
+                                    <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                        <Paperclip size={12} /> {attachedFile.name}
+                                    </p>
+                                )}
                             </div>
                             <button
                                 type="submit"
@@ -156,6 +190,17 @@ const LeaveApplication = () => {
                                         </span>
                                     </div>
                                     <p className="text-sm text-gray-600 italic">"{item.reason}"</p>
+                                    {item.attachment && (
+                                        <div className="mt-2">
+                                            {item.attachment.startsWith('data:image') ? (
+                                                <img src={item.attachment} alt={item.attachmentName || 'Attachment'} className="h-20 w-auto rounded border border-gray-200 object-cover" />
+                                            ) : (
+                                                <a href={item.attachment} download={item.attachmentName || 'document'} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                                                    <Paperclip size={12} /> {item.attachmentName || 'View Attachment'}
+                                                </a>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                             {leaveHistory.length === 0 && (

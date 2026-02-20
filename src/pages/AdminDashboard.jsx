@@ -249,7 +249,7 @@ const AdminDashboard = () => {
     const renderContent = () => {
         switch (activeTab) {
             case 'dashboard':
-                return <DashboardHome students={students} hostels={hostelList} complaints={complaintList} leaveRequests={leaveRequests} />;
+                return <DashboardHome students={students} hostels={hostelList} complaints={complaintList} leaveRequests={leaveRequests} onNavigate={setActiveTab} />;
             case 'students':
                 return <StudentList students={students} hostels={hostelList} onDelete={handleDeleteStudent} onEdit={handleEditStudent} onAdd={handleAddStudentClick} />;
             case 'hostels':
@@ -655,12 +655,12 @@ const AdminDashboard = () => {
 
 // Sub-Components
 
-const DashboardHome = ({ students, hostels, complaints, leaveRequests = [] }) => {
+const DashboardHome = ({ students, hostels, complaints, leaveRequests = [], onNavigate }) => {
     const stats = [
-        { label: "Pending Leaves", value: leaveRequests.filter(r => r.status === 'Pending').length, icon: Calendar, color: "bg-orange-50", text: "text-orange-600" },
-        { label: "Total Hostels", value: hostels.length, icon: Home, color: "bg-blue-50", text: "text-blue-600" },
-        { label: "Active Students", value: students.length, icon: Users, color: "bg-purple-50", text: "text-purple-600" },
-        { label: "Open Complaints", value: complaints.filter(c => c.status === 'Pending').length, icon: AlertCircle, color: "bg-red-50", text: "text-red-600" },
+        { label: "Pending Leaves", value: leaveRequests.filter(r => r.status === 'Pending').length, icon: Calendar, color: "bg-orange-50", text: "text-orange-600", tab: "leaves" },
+        { label: "Total Hostels", value: hostels.length, icon: Home, color: "bg-blue-50", text: "text-blue-600", tab: "hostels" },
+        { label: "Active Students", value: students.length, icon: Users, color: "bg-purple-50", text: "text-purple-600", tab: "students" },
+        { label: "Open Complaints", value: complaints.filter(c => c.status === 'Pending').length, icon: AlertCircle, color: "bg-red-50", text: "text-red-600", tab: "complaints" },
     ];
 
     const getOccupancyColor = (percentage) => {
@@ -674,7 +674,7 @@ const DashboardHome = ({ students, hostels, complaints, leaveRequests = [] }) =>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {stats.map((stat, index) => (
-                    <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow">
+                    <div key={index} onClick={() => onNavigate && onNavigate(stat.tab)} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:shadow-md hover:border-gray-200 transition-all">
                         <div>
                             <p className="text-sm font-medium text-gray-500 mb-1">{stat.label}</p>
                             <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
@@ -1058,59 +1058,108 @@ const NoticeBoardManage = ({ notices, onDelete, onAdd }) => (
     </div>
 );
 
-const LeaveManage = ({ requests, onAction }) => (
-    <div className="animate-fade-in">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Manage Leave Requests</h2>
-        {requests.length === 0 ? (
-            <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
-                No leave requests found.
-            </div>
-        ) : (
-            <div className="space-y-4">
-                {requests.map(req => (
-                    <div key={req.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${req.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                                    req.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                        'bg-orange-100 text-orange-700'
-                                    }`}>{req.status}</span>
-                                <span className="text-sm text-gray-500">{req.date}</span>
-                            </div>
-                            <h3 className="font-bold text-gray-900">{req.type} Application</h3>
-                            <p className="text-sm text-gray-600 mt-1">
-                                <span className="font-medium">{req.studentName}</span> ({req.regNo})
-                            </p>
-                            <p className="text-sm text-gray-500 mt-2">
-                                Date: {req.fromDate} to {req.toDate}
-                            </p>
-                            <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded">
-                                Reason: {req.reason}
-                            </p>
-                        </div>
+const LeaveManage = ({ requests, onAction }) => {
+    const [previewImage, setPreviewImage] = React.useState(null);
 
-                        {req.status === 'Pending' && (
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => onAction(req.id, 'Approved')}
-                                    className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-                                >
-                                    Approve
-                                </button>
-                                <button
-                                    onClick={() => onAction(req.id, 'Rejected')}
-                                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-                                >
-                                    Reject
-                                </button>
+    return (
+        <div className="animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Manage Leave Requests</h2>
+            {requests.length === 0 ? (
+                <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
+                    No leave requests found.
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {requests.map(req => (
+                        <div key={req.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${req.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                        req.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                            'bg-orange-100 text-orange-700'
+                                        }`}>{req.status}</span>
+                                    <span className="text-sm text-gray-500">{req.date}</span>
+                                </div>
+                                <h3 className="font-bold text-gray-900">{req.type} Application</h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    <span className="font-medium">{req.studentName}</span> ({req.regNo})
+                                </p>
+                                <p className="text-sm text-gray-500 mt-2">
+                                    Date: {req.from || req.fromDate} to {req.to || req.toDate}
+                                </p>
+                                <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded">
+                                    Reason: {req.reason}
+                                </p>
+
+                                {/* Attachment Display */}
+                                {req.attachment && (
+                                    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                        <p className="text-xs text-blue-700 font-medium mb-2 flex items-center gap-1">
+                                            📎 Attached Document: {req.attachmentName || 'File'}
+                                        </p>
+                                        {req.attachment.startsWith('data:image') ? (
+                                            <img
+                                                src={req.attachment}
+                                                alt={req.attachmentName || 'Attachment'}
+                                                className="h-28 w-auto rounded border border-blue-200 object-cover cursor-pointer hover:opacity-90 transition-opacity shadow-sm"
+                                                onClick={() => setPreviewImage(req.attachment)}
+                                            />
+                                        ) : (
+                                            <a
+                                                href={req.attachment}
+                                                download={req.attachmentName || 'document'}
+                                                className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline bg-white px-3 py-1.5 rounded border border-blue-200 font-medium"
+                                            >
+                                                ⬇ Download {req.attachmentName || 'File'}
+                                            </a>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                        )}
+
+                            {req.status === 'Pending' && (
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => onAction(req.id, 'Approved')}
+                                        className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={() => onAction(req.id, 'Rejected')}
+                                        className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setPreviewImage(null)}>
+                    <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
+                        <button
+                            className="absolute -top-10 right-0 text-white hover:text-gray-300"
+                            onClick={() => setPreviewImage(null)}
+                        >
+                            <X size={24} />
+                        </button>
+                        <img
+                            src={previewImage}
+                            alt="Full Preview"
+                            className="max-w-full max-h-[90vh] rounded-lg shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        />
                     </div>
-                ))}
-            </div>
-        )}
-    </div>
-);
+                </div>
+            )}
+        </div>
+    );
+};
 
 const TransferRequestList = ({ requests, onAction, onViewDetails }) => {
     // Separate requests into Allocation (New) and Transfers
