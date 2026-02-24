@@ -1,4 +1,22 @@
 import React from 'react';
+import Maintenance from './pages/Maintenance';
+
+// ============================================================
+// 🔧 MAINTENANCE MODE IS ON
+// To restore the app, comment out the Maintenance App below
+// and uncomment the Original App section.
+// ============================================================
+
+function App() {
+    return <Maintenance />;
+}
+
+export default App;
+
+// ============================================================
+// 📦 ORIGINAL APP — Uncomment below & comment above to restore
+// ============================================================
+/*
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import StudentRegistration from './pages/StudentRegistration';
@@ -24,7 +42,6 @@ const ProtectedRoute = ({ children }) => {
     }
 
     if (user.status === 'Pending_Hostel' || user.status === 'Pending_Approval') {
-        // Redirect pending users to Hostel Selection page
         return <HostelSelection />;
     }
 
@@ -53,7 +70,6 @@ function App() {
                     <Route path="/leave-application" element={<LeaveApplication />} />
                     <Route path="/complaints" element={<ComplaintSubmission />} />
                     <Route path="/rules" element={<HostelRules />} />
-                    <Route path="/rules" element={<HostelRules />} />
                     <Route path="/profile" element={<StudentProfile />} />
                     <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -65,3 +81,4 @@ function App() {
 }
 
 export default App;
+*/
