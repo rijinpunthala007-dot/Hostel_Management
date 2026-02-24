@@ -10,6 +10,7 @@ const StudentRegistration = () => {
         gender: '', // New Field
         regNo: '',
         department: 'Computer Science', // Default
+        courseType: '', // UG or PG
         year: '1st Year',     // Default
         email: '',
         phone: '',
@@ -145,6 +146,14 @@ const StudentRegistration = () => {
                                     <option>Commerce</option>
                                     <option>Mathematics</option>
                                     <option>English</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Course Type</label>
+                                <select required name="courseType" onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none">
+                                    <option value="">Select UG / PG</option>
+                                    <option value="UG">UG (Undergraduate)</option>
+                                    <option value="PG">PG (Postgraduate)</option>
                                 </select>
                             </div>
                             <div>
