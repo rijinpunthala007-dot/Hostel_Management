@@ -142,9 +142,9 @@ const StudentRegistration = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                                 <select name="department" onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#991B1B] outline-none">
                                     <option>Computer Science</option>
-                                    <option>Mechanical</option>
-                                    <option>Electrical</option>
-                                    <option>Civil</option>
+                                    <option>Commerce</option>
+                                    <option>Mathematics</option>
+                                    <option>English</option>
                                 </select>
                             </div>
                             <div>
