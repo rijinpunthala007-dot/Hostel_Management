@@ -1,22 +1,4 @@
 import React from 'react';
-import Maintenance from './pages/Maintenance';
-
-// ============================================================
-// 🔧 MAINTENANCE MODE IS ON
-// To restore the app, comment out the Maintenance App below
-// and uncomment the Original App section.
-// ============================================================
-
-function App() {
-    return <Maintenance />;
-}
-
-export default App;
-
-// ============================================================
-// 📦 ORIGINAL APP — Uncomment below & comment above to restore
-// ============================================================
-/*
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import StudentRegistration from './pages/StudentRegistration';
@@ -81,4 +63,3 @@ function App() {
 }
 
 export default App;
-*/

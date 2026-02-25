@@ -2,6 +2,106 @@
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu, ArrowRightLeft, UserPlus, User } from 'lucide-react';
 import { allStudents, complaints, hostels, announcements as initialAnnouncements, menuData } from '../mockData';
+import emailjs from '@emailjs/browser';
+
+// ─── EmailJS Configuration ────────────────────────────────────────────────────
+// Replace these placeholder values with your real EmailJS credentials.
+// Sign up free at https://www.emailjs.com → Services → Templates → Account → API Keys
+const EMAILJS_SERVICE_ID = 'service_4x9s21k';
+const EMAILJS_TEMPLATE_ID = 'template_ypv329m';          // Used for new allocation approvals
+const EMAILJS_TRANSFER_TEMPLATE_ID = 'template_khtqepj'; // Used for transfer approvals
+const EMAILJS_MENU_TEMPLATE_ID = EMAILJS_TEMPLATE_ID; // Reuses allocation template — no extra template needed
+const EMAILJS_PUBLIC_KEY = 'ry5btGsLagVYhviZI';
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Sends a hostel-allocation approval email to a student via EmailJS.
+ * Template variables expected: {{to_email}}, {{to_name}}, {{hostel_name}}, {{reg_no}}
+ */
+const sendApprovalEmail = (studentEmail, studentName, hostelName, regNo) => {
+    if (!studentEmail || studentEmail === 'N/A') return;
+    emailjs
+        .send(
+            EMAILJS_SERVICE_ID,
+            EMAILJS_TEMPLATE_ID,
+            {
+                to_email: studentEmail,
+                to_name: studentName,
+                hostel_name: hostelName,
+                reg_no: regNo,
+            },
+            EMAILJS_PUBLIC_KEY
+        )
+        .then(() => {
+            console.log(`✅ Approval email sent to ${studentEmail}`);
+        })
+        .catch((err) => {
+            console.error('❌ EmailJS error:', err);
+        });
+};
+
+/**
+ * Sends a hostel-transfer approval email to a student via EmailJS.
+ * Template variables expected: {{to_email}}, {{to_name}}, {{from_hostel}}, {{to_hostel}}, {{reg_no}}
+ */
+const sendTransferApprovalEmail = (studentEmail, studentName, fromHostel, toHostel, regNo) => {
+    if (!studentEmail || studentEmail === 'N/A') return;
+    emailjs
+        .send(
+            EMAILJS_SERVICE_ID,
+            EMAILJS_TRANSFER_TEMPLATE_ID,
+            {
+                to_email: studentEmail,
+                to_name: studentName,
+                from_hostel: fromHostel,
+                to_hostel: toHostel,
+                hostel_name: toHostel, // alias so a shared template still works
+                reg_no: regNo,
+            },
+            EMAILJS_PUBLIC_KEY
+        )
+        .then(() => {
+            console.log(`✅ Transfer approval email sent to ${studentEmail}`);
+        })
+        .catch((err) => {
+            console.error('❌ EmailJS transfer error:', err);
+        });
+};
+
+/**
+ * Sends today's food menu to a single opted-in student.
+ * Template variables: {{to_email}}, {{to_name}}, {{breakfast}}, {{lunch}}, {{snacks}}, {{dinner}}
+ */
+const sendMenuNotificationEmail = (studentEmail, studentName, menuData) => {
+    if (!studentEmail || studentEmail === 'N/A') return;
+    const getItems = (meal) => {
+        const items = menuData[meal]?.items;
+        if (!items) return 'Not available';
+        if (typeof items === 'string') return items;
+        if (Array.isArray(items)) return items.map(i => i.name).join(', ');
+        return 'Not available';
+    };
+    // Pack the full menu into hostel_name so the existing allocation template displays it
+    const menuSummary =
+        `🍳 Breakfast: ${getItems('breakfast')}\n` +
+        `🍛 Lunch:     ${getItems('lunch')}\n` +
+        `☕ Snacks:    ${getItems('snacks')}\n` +
+        `🍽️ Dinner:    ${getItems('dinner')}`;
+
+    emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_MENU_TEMPLATE_ID,
+        {
+            to_email: studentEmail,
+            to_name: studentName,
+            hostel_name: menuSummary,        // reused field carries today's full menu
+            reg_no: "Today's Menu Update",
+        },
+        EMAILJS_PUBLIC_KEY
+    )
+        .then(() => console.log(`✅ Menu email sent to ${studentEmail}`))
+        .catch(err => console.error('❌ Menu EmailJS error:', err));
+};
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -98,6 +198,38 @@ const AdminDashboard = () => {
                     };
                     setStudents([...students, newStudent]);
                 }
+
+                // Send welcome email to the student
+                const studentEmail = request.studentDetails?.email || '';
+                sendApprovalEmail(
+                    studentEmail,
+                    request.studentName,
+                    request.requestedHostel,
+                    request.regNo
+                );
+            }
+
+            // Handle Transfer – update student hostel and send email
+            if (request && request.type === 'Transfer') {
+                const existingStudentIndex = students.findIndex(s => s.regNo === request.regNo);
+                if (existingStudentIndex !== -1) {
+                    const updatedStudents = [...students];
+                    updatedStudents[existingStudentIndex] = {
+                        ...updatedStudents[existingStudentIndex],
+                        hostel: request.requestedHostel,
+                    };
+                    setStudents(updatedStudents);
+                }
+
+                // Send transfer approval email
+                const studentEmail = request.studentDetails?.email || '';
+                sendTransferApprovalEmail(
+                    studentEmail,
+                    request.studentName,
+                    request.currentHostel,
+                    request.requestedHostel,
+                    request.regNo
+                );
             }
 
             // Update User Data in Local Storage (simulating DB update for the logged in user)
@@ -233,6 +365,18 @@ const AdminDashboard = () => {
     const handleSaveMenu = () => {
         localStorage.setItem('foodMenu', JSON.stringify(menu));
         alert('Food menu updated successfully!');
+
+        /* 🔮 FUTURE SCOPE: Food menu email notifications
+        const optedIn = JSON.parse(localStorage.getItem('menuNotifyEmails') || '[]');
+        if (optedIn.length > 0) {
+            optedIn.forEach(({ email, name }) => {
+                sendMenuNotificationEmail(email, name, menu);
+            });
+            alert(`Food menu updated! Notifying ${optedIn.length} student(s) by email.`);
+        } else {
+            alert('Food menu updated successfully!');
+        }
+        */
     };
 
     const menuItems = [

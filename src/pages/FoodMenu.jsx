@@ -11,6 +11,33 @@ const FoodMenu = () => {
         return saved ? JSON.parse(saved) : foodMenuFull;
     });
 
+    /* 🔮 FUTURE SCOPE: Food menu notification toggle
+    const [notifyEnabled, setNotifyEnabled] = useState(false);
+
+    useEffect(() => {
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const optedIn = JSON.parse(localStorage.getItem('menuNotifyEmails') || '[]');
+        setNotifyEnabled(optedIn.some(s => s.email === userData.email));
+    }, []);
+
+    const handleNotifyToggle = () => {
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const { email, name } = userData;
+        if (!email || email === 'N/A') { alert('No email found.'); return; }
+        const optedIn = JSON.parse(localStorage.getItem('menuNotifyEmails') || '[]');
+        if (!notifyEnabled) {
+            if (!optedIn.some(s => s.email === email)) {
+                optedIn.push({ email, name: name || 'Student' });
+                localStorage.setItem('menuNotifyEmails', JSON.stringify(optedIn));
+            }
+            setNotifyEnabled(true);
+        } else {
+            localStorage.setItem('menuNotifyEmails', JSON.stringify(optedIn.filter(s => s.email !== email)));
+            setNotifyEnabled(false);
+        }
+    };
+    */
+
     const tabs = [
         { id: 'breakfast', label: 'Breakfast' },
         { id: 'lunch', label: 'Lunch' },
@@ -19,7 +46,6 @@ const FoodMenu = () => {
     ];
 
     const currentItems = menu[activeTab]?.items || [];
-    // If currentItems is a string (from Admin Dashboard), we need to render it as text, not map it.
 
     return (
         <div className="min-h-screen bg-[#F3F4F6] font-sans">
@@ -32,6 +58,8 @@ const FoodMenu = () => {
                     <ArrowLeft size={20} />
                 </button>
                 <h1 className="font-bold text-gray-800 text-xl">Food Menu</h1>
+
+                {/* 🔮 FUTURE SCOPE: Bell notification toggle button goes here */}
             </nav>
 
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -93,9 +121,6 @@ const FoodMenu = () => {
                         </div>
                     )}
                 </div>
-
-
-
             </div>
         </div>
     );
