@@ -145,7 +145,7 @@ const HostelSelection = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Rejection Banner */}
                 {rejectedRequest && (
-                    <div className="mb-8 bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg flex items-center gap-3 animate-fade-in relative">
+                    <div className="mb-8 bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg flex items-center gap-3 relative">
                         <div className="bg-red-100 p-2 rounded-full">
                             <AlertCircle size={20} />
                         </div>
@@ -166,7 +166,7 @@ const HostelSelection = () => {
                 )}
 
                 {user?.status === 'Pending_Approval' && (
-                    <div className="mb-8 bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg flex items-center gap-3 animate-fade-in">
+                    <div className="mb-8 bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg flex items-center gap-3">
                         <div className="bg-blue-100 p-2 rounded-full">
                             <Building size={20} />
                         </div>

@@ -2,49 +2,47 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogOut, Home, User, Wallet, BedDouble, Utensils, AlertCircle, Coffee, CalendarCheck, FilePlus, Bell, FileText, CheckCircle } from 'lucide-react';
 import { userData, announcements } from '../mockData';
+import NotificationCenter from '../components/NotificationCenter';
 
 const StudentDashboard = () => {
     const navigate = useNavigate();
-    const [user, setUser] = React.useState(userData);
-    const [notices, setNotices] = React.useState(announcements);
+    const [user, setUser] = React.useState(() => {
+        const storedUser = localStorage.getItem('userData');
+        return storedUser ? JSON.parse(storedUser) : userData;
+    });
+    const [notices, setNotices] = React.useState(() => {
+        const storedNotices = localStorage.getItem('announcements');
+        return storedNotices ? JSON.parse(storedNotices) : announcements;
+    });
     const [rejectedRequest, setRejectedRequest] = React.useState(null);
     const [approvedRequest, setApprovedRequest] = React.useState(null);
     const [leaveNotification, setLeaveNotification] = React.useState(null);
 
     React.useEffect(() => {
-        const storedUser = localStorage.getItem('userData');
-        let currentUser = user;
-        if (storedUser) {
-            currentUser = JSON.parse(storedUser);
-            // SYNC FIX: Check main student list for latest updates (like Fees)
-            const allStudents = localStorage.getItem('studentList');
-            if (allStudents) {
-                const students = JSON.parse(allStudents);
-                const latestData = students.find(s => s.regNo === currentUser.regNo);
+        let currentUser = { ...user };
+        // SYNC FIX: Check main student list for latest updates (like Fees)
+        const allStudents = localStorage.getItem('studentList');
+        if (allStudents) {
+            const students = JSON.parse(allStudents);
+            const latestData = students.find(s => s.regNo === currentUser.regNo);
 
-                if (latestData) {
-                    // SAFE MERGE: Only update status/admin-controlled fields. 
-                    // DO NOT overwrite name/email/phone from the DB if they differ (unless intended).
-                    // This prevents "identity swapping" if a RegNo collision somehow happened.
-                    currentUser = {
-                        ...currentUser,
-                        feeDue: latestData.feeDue,
-                        hostelName: latestData.hostel, // Map 'hostel' from DB to 'hostelName' in session
-                        roomNumber: latestData.room,   // Map 'room' from DB to 'roomNumber' in session
-                        status: latestData.status,
-                        // Keep other fields like name, email, phone from 'currentUser' (session)
-                    };
+            if (latestData) {
+                // SAFE MERGE: Only update status/admin-controlled fields. 
+                // DO NOT overwrite name/email/phone from the DB if they differ (unless intended).
+                // This prevents "identity swapping" if a RegNo collision somehow happened.
+                currentUser = {
+                    ...currentUser,
+                    feeDue: latestData.feeDue,
+                    hostelName: latestData.hostel, // Map 'hostel' from DB to 'hostelName' in session
+                    roomNumber: latestData.room,   // Map 'room' from DB to 'roomNumber' in session
+                    status: latestData.status,
+                    // Keep other fields like name, email, phone from 'currentUser' (session)
+                };
 
-                    // Update session storage to keep it in sync
-                    localStorage.setItem('userData', JSON.stringify(currentUser));
-                }
+                // Update session storage to keep it in sync
+                localStorage.setItem('userData', JSON.stringify(currentUser));
+                setUser(currentUser);
             }
-            setUser(currentUser);
-        }
-
-        const storedNotices = localStorage.getItem('announcements');
-        if (storedNotices) {
-            setNotices(JSON.parse(storedNotices));
         }
 
         const storedRequests = localStorage.getItem('hostelChangeRequests');
@@ -165,19 +163,22 @@ const StudentDashboard = () => {
                     <img src="/logo.png" alt="College Logo" className="h-10 w-auto" />
                     <span className="font-bold text-gray-800 text-lg">HMS</span>
                 </div>
-                <button
-                    onClick={() => navigate('/')}
-                    className="flex items-center gap-2 text-gray-600 hover:text-[#991B1B] font-medium"
-                >
-                    <LogOut size={18} />
-                    Logout
-                </button>
+                <div className="flex items-center gap-3">
+                    <NotificationCenter />
+                    <button
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-2 text-gray-600 hover:text-[#991B1B] font-medium"
+                    >
+                        <LogOut size={18} />
+                        Logout
+                    </button>
+                </div>
             </nav>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Notifications */}
                 {rejectedRequest && (
-                    <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative flex items-start gap-3 shadow-sm animate-fade-in">
+                    <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative flex items-start gap-3 shadow-sm">
                         <AlertCircle className="shrink-0 mt-0.5" size={20} />
                         <div className="flex-1">
                             <strong className="font-bold block">Transfer Request Rejected</strong>
@@ -199,7 +200,7 @@ const StudentDashboard = () => {
                 )}
 
                 {approvedRequest && (
-                    <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg relative flex items-start gap-3 shadow-sm animate-fade-in">
+                    <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg relative flex items-start gap-3 shadow-sm">
                         <CheckCircle className="shrink-0 mt-0.5" size={20} />
                         <div className="flex-1">
                             <strong className="font-bold block">Transfer Request Approved!</strong>
@@ -221,7 +222,7 @@ const StudentDashboard = () => {
                 )}
 
                 {leaveNotification && (
-                    <div className={`mb-6 px-4 py-3 rounded-lg relative flex items-start gap-3 shadow-sm animate-fade-in border ${leaveNotification.status === 'Approved'
+                    <div className={`mb-6 px-4 py-3 rounded-lg relative flex items-start gap-3 shadow-sm border ${leaveNotification.status === 'Approved'
                         ? 'bg-green-50 border-green-200 text-green-700'
                         : 'bg-red-50 border-red-200 text-red-700'
                         }`}>
@@ -309,7 +310,6 @@ const StudentDashboard = () => {
                     </div>
 
                     {/* Fee Status Card */}
-                    {/* Fee Status Card */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-start justify-between mb-4">
                             <div className={`p-2 rounded-full ${user.feeDue > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
@@ -321,6 +321,14 @@ const StudentDashboard = () => {
                             <span className={`w-2 h-2 rounded-full inline-block ${user.feeDue > 0 ? 'bg-red-500' : 'bg-green-500'}`}></span>
                             {user.feeDue > 0 ? 'Payment Pending' : 'No dues pending'}
                         </p>
+                        {user.feeDue > 0 && (
+                            <button
+                                onClick={() => alert('Online Payment Gateway integration is a future scope feature. Please pay at the hostel office.')}
+                                className="mt-4 w-full bg-[#991B1B] text-white py-2 rounded-lg font-medium text-sm hover:bg-red-800 transition-colors flex items-center justify-center gap-2"
+                            >
+                                Pay Now
+                            </button>
+                        )}
                     </div>
                 </div>
 

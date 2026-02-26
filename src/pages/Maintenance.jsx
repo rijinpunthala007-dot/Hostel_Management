@@ -12,7 +12,7 @@ const Maintenance = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 font-sans bg-[#F3F4F6]">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-8 animate-fade-in">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-8">
                 {/* Logo & Title — same as Login */}
                 <div className="text-center">
                     <img src="/logo.png" alt="College Logo" className="h-20 w-auto mx-auto mb-6" />

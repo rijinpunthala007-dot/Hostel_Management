@@ -104,7 +104,7 @@ const StudentRegistration = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 font-sans bg-[#F3F4F6]">
-            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden p-8 animate-fade-in">
+            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden p-8">
                 <button onClick={() => navigate('/')} className="mb-6 flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors">
                     <ArrowLeft size={20} /> Back to Login
                 </button>

@@ -5,6 +5,8 @@ import { complaints } from '../mockData';
 
 const ComplaintSubmission = () => {
     const navigate = useNavigate();
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const currentUserName = userData.name || 'Student';
     const [category, setCategory] = useState('Infrastructure');
     const [description, setDescription] = useState('');
     const [image, setImage] = useState(null);
@@ -28,7 +30,7 @@ const ComplaintSubmission = () => {
         e.preventDefault();
         const newComplaint = {
             id: Date.now(), // Use timestamp for unique ID
-            student: "Rahul Kumar", // Mocked current user - ideally get from userData
+            student: currentUserName,
             type: category,
             desc: description,
             image: image,
@@ -125,7 +127,7 @@ const ComplaintSubmission = () => {
                             My Complaints
                         </h2>
                         <div className="space-y-4">
-                            {myComplaints.filter(c => c.student === 'Rahul Kumar').map((item) => (
+                            {myComplaints.filter(c => c.student === currentUserName).map((item) => (
                                 <div key={item.id} className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex items-center gap-2">

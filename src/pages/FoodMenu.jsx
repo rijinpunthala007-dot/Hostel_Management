@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, Flame, Utensils } from 'lucide-react';
+import { ArrowLeft, Star, Flame, Utensils, Bell, BellOff } from 'lucide-react';
 import { foodMenuFull } from '../mockData';
 
 const FoodMenu = () => {
@@ -11,7 +11,6 @@ const FoodMenu = () => {
         return saved ? JSON.parse(saved) : foodMenuFull;
     });
 
-    /* 🔮 FUTURE SCOPE: Food menu notification toggle
     const [notifyEnabled, setNotifyEnabled] = useState(false);
 
     useEffect(() => {
@@ -23,7 +22,7 @@ const FoodMenu = () => {
     const handleNotifyToggle = () => {
         const userData = JSON.parse(localStorage.getItem('userData') || '{}');
         const { email, name } = userData;
-        if (!email || email === 'N/A') { alert('No email found.'); return; }
+        if (!email || email === 'N/A') { alert('No email found on your profile.'); return; }
         const optedIn = JSON.parse(localStorage.getItem('menuNotifyEmails') || '[]');
         if (!notifyEnabled) {
             if (!optedIn.some(s => s.email === email)) {
@@ -36,7 +35,6 @@ const FoodMenu = () => {
             setNotifyEnabled(false);
         }
     };
-    */
 
     const tabs = [
         { id: 'breakfast', label: 'Breakfast' },
@@ -59,7 +57,17 @@ const FoodMenu = () => {
                 </button>
                 <h1 className="font-bold text-gray-800 text-xl">Food Menu</h1>
 
-                {/* 🔮 FUTURE SCOPE: Bell notification toggle button goes here */}
+                {/* Notification toggle */}
+                <button
+                    onClick={handleNotifyToggle}
+                    className={`ml-auto p-2 rounded-full transition-colors ${notifyEnabled
+                        ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                    title={notifyEnabled ? 'Disable daily menu emails' : 'Get daily menu emails'}
+                >
+                    {notifyEnabled ? <Bell size={20} /> : <BellOff size={20} />}
+                </button>
             </nav>
 
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

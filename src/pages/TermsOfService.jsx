@@ -7,7 +7,7 @@ const TermsOfService = () => {
 
     return (
         <div className="min-h-screen bg-[#F3F4F6] p-8">
-            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-8 animate-fade-in">
+            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-8">
                 <button
                     onClick={() => navigate(-1)}
                     className="flex items-center gap-2 text-gray-600 hover:text-[#991B1B] mb-6 transition-colors"

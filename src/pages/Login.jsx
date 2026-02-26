@@ -116,7 +116,7 @@ const Login = () => {
                                 placeholder={activeTab === 'admin' ? "••••••••" : "••••••••"}
                             />
                             <div className="flex justify-end mt-2">
-                                <a href="#" className="text-sm font-medium text-[#991B1B] hover:text-red-800">
+                                <a href="#" className="text-sm font-medium text-[#991B1B] hover:text-red-800 transition-colors">
                                     Forgot password?
                                 </a>
                             </div>
@@ -124,7 +124,7 @@ const Login = () => {
 
                         <button
                             type="submit"
-                            className="w-full bg-[#991B1B] text-white py-3.5 rounded-xl font-semibold hover:bg-red-800 transition-all duration-200 transform hover:scale-[1.02] shadow-md hover:shadow-lg"
+                            className="w-full bg-[#991B1B] text-white py-3.5 rounded-xl font-semibold hover:bg-red-800 transition-all duration-200 shadow-md hover:shadow-lg"
                         >
                             {activeTab === 'student' ? 'Sign In as Student' : 'Sign In as Admin'}
                         </button>

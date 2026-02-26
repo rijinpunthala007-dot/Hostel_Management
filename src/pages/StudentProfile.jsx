@@ -5,7 +5,10 @@ import { userData } from '../mockData';
 
 const StudentProfile = () => {
     const navigate = useNavigate();
-    const [user, setUser] = React.useState(userData);
+    const [user, setUser] = React.useState(() => {
+        const storedUser = localStorage.getItem('userData');
+        return storedUser ? JSON.parse(storedUser) : userData;
+    });
 
     React.useEffect(() => {
         const storedUser = localStorage.getItem('userData');

@@ -1,8 +1,9 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu, ArrowRightLeft, UserPlus, User } from 'lucide-react';
+import { LogOut, Users, Home, ClipboardList, BedDouble, Utensils, Bell, AlertCircle, Search, Plus, Trash2, Edit, Save, X, Calendar, CheckCircle, XCircle, Menu, ArrowRightLeft, UserPlus, User, Download } from 'lucide-react';
 import { allStudents, complaints, hostels, announcements as initialAnnouncements, menuData } from '../mockData';
 import emailjs from '@emailjs/browser';
+import { exportStudentList, exportComplaintReport, exportLeaveRequests, exportHostelOccupancy } from '../utils/pdfExport';
 
 // ─── EmailJS Configuration ────────────────────────────────────────────────────
 // Replace these placeholder values with your real EmailJS credentials.
@@ -10,8 +11,12 @@ import emailjs from '@emailjs/browser';
 const EMAILJS_SERVICE_ID = 'service_4x9s21k';
 const EMAILJS_TEMPLATE_ID = 'template_ypv329m';          // Used for new allocation approvals
 const EMAILJS_TRANSFER_TEMPLATE_ID = 'template_khtqepj'; // Used for transfer approvals
-const EMAILJS_MENU_TEMPLATE_ID = EMAILJS_TEMPLATE_ID; // Reuses allocation template — no extra template needed
 const EMAILJS_PUBLIC_KEY = 'ry5btGsLagVYhviZI';
+
+// ─── Food Menu Notification (separate EmailJS account) ─────────────────────
+const FOOD_EMAILJS_SERVICE_ID = 'service_xb8rvbh';
+const FOOD_EMAILJS_TEMPLATE_ID = 'template_tiz5kex';
+const FOOD_EMAILJS_PUBLIC_KEY = 'QT7453fNCLmvrHNA8';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -70,6 +75,7 @@ const sendTransferApprovalEmail = (studentEmail, studentName, fromHostel, toHost
 
 /**
  * Sends today's food menu to a single opted-in student.
+ * Uses a separate EmailJS account dedicated to food notifications.
  * Template variables: {{to_email}}, {{to_name}}, {{breakfast}}, {{lunch}}, {{snacks}}, {{dinner}}
  */
 const sendMenuNotificationEmail = (studentEmail, studentName, menuData) => {
@@ -81,23 +87,19 @@ const sendMenuNotificationEmail = (studentEmail, studentName, menuData) => {
         if (Array.isArray(items)) return items.map(i => i.name).join(', ');
         return 'Not available';
     };
-    // Pack the full menu into hostel_name so the existing allocation template displays it
-    const menuSummary =
-        `🍳 Breakfast: ${getItems('breakfast')}\n` +
-        `🍛 Lunch:     ${getItems('lunch')}\n` +
-        `☕ Snacks:    ${getItems('snacks')}\n` +
-        `🍽️ Dinner:    ${getItems('dinner')}`;
 
     emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_MENU_TEMPLATE_ID,
+        FOOD_EMAILJS_SERVICE_ID,
+        FOOD_EMAILJS_TEMPLATE_ID,
         {
             to_email: studentEmail,
             to_name: studentName,
-            hostel_name: menuSummary,        // reused field carries today's full menu
-            reg_no: "Today's Menu Update",
+            breakfast: getItems('breakfast'),
+            lunch: getItems('lunch'),
+            snacks: getItems('snacks'),
+            dinner: getItems('dinner'),
         },
-        EMAILJS_PUBLIC_KEY
+        FOOD_EMAILJS_PUBLIC_KEY
     )
         .then(() => console.log(`✅ Menu email sent to ${studentEmail}`))
         .catch(err => console.error('❌ Menu EmailJS error:', err));
@@ -364,9 +366,7 @@ const AdminDashboard = () => {
 
     const handleSaveMenu = () => {
         localStorage.setItem('foodMenu', JSON.stringify(menu));
-        alert('Food menu updated successfully!');
 
-        /* 🔮 FUTURE SCOPE: Food menu email notifications
         const optedIn = JSON.parse(localStorage.getItem('menuNotifyEmails') || '[]');
         if (optedIn.length > 0) {
             optedIn.forEach(({ email, name }) => {
@@ -376,7 +376,28 @@ const AdminDashboard = () => {
         } else {
             alert('Food menu updated successfully!');
         }
-        */
+    };
+
+    // Clear handlers
+    const handleClearComplaints = () => {
+        if (window.confirm('Are you sure you want to clear all complaints?')) {
+            setComplaintList([]);
+            localStorage.setItem('complaintList', JSON.stringify([]));
+        }
+    };
+
+    const handleClearLeaveRequests = () => {
+        if (window.confirm('Are you sure you want to clear all leave requests?')) {
+            setLeaveRequests([]);
+            localStorage.setItem('leaveRequests', JSON.stringify([]));
+        }
+    };
+
+    const handleClearChangeRequests = () => {
+        if (window.confirm('Are you sure you want to clear all admission & transfer requests?')) {
+            setChangeRequests([]);
+            localStorage.setItem('hostelChangeRequests', JSON.stringify([]));
+        }
     };
 
     const menuItems = [
@@ -399,13 +420,13 @@ const AdminDashboard = () => {
             case 'hostels':
                 return <HostelManage hostels={hostelList} onDelete={handleDeleteHostel} onEdit={handleEditHostel} onAdd={handleAddHostelClick} />;
             case 'complaints':
-                return <ComplaintList complaints={complaintList} setComplaints={setComplaintList} />;
+                return <ComplaintList complaints={complaintList} setComplaints={setComplaintList} onClear={handleClearComplaints} />;
             case 'food':
                 return <FoodMenuManage menu={menu} setMenu={setMenu} onSave={handleSaveMenu} />;
             case 'leaves':
-                return <LeaveManage requests={leaveRequests} onAction={handleLeaveAction} />;
+                return <LeaveManage requests={leaveRequests} onAction={handleLeaveAction} onClear={handleClearLeaveRequests} />;
             case 'admissions':
-                return <TransferRequestList requests={changeRequests} onAction={handleChangeRequestAction} onViewDetails={(applicant) => {
+                return <TransferRequestList requests={changeRequests} onAction={handleChangeRequestAction} onClear={handleClearChangeRequests} onViewDetails={(applicant) => {
                     setSelectedApplicant(applicant);
                     setShowApplicantModal(true);
                 }} />;
@@ -512,7 +533,7 @@ const AdminDashboard = () => {
 
             {/* Simulated Modals */}
             {showStudentModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white p-6 rounded-lg w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900">{editingStudent ? `Edit Student: ${editingStudent.name}` : 'Add New Student'}</h3>
@@ -644,7 +665,7 @@ const AdminDashboard = () => {
             )}
 
             {showHostelModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white p-6 rounded-lg w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900">{editingHostel ? 'Edit Hostel' : 'Add New Hostel'}</h3>
@@ -754,7 +775,7 @@ const AdminDashboard = () => {
             )}
 
             {showNoticeModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold">Post New Notice</h3>
@@ -814,7 +835,7 @@ const DashboardHome = ({ students, hostels, complaints, leaveRequests = [], onNa
     };
 
     return (
-        <div className="animate-fade-in">
+        <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {stats.map((stat, index) => (
@@ -868,12 +889,17 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
     });
 
     return (
-        <div className="animate-fade-in">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+            <div className="flex justify-between items-center gap-4 mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Manage Students</h2>
-                <button onClick={onAdd} className="w-full md:w-auto bg-[#991B1B] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium hover:bg-red-800 transition-colors shadow-sm">
-                    <Plus size={18} /> Add Student
-                </button>
+                <div className="flex gap-2 shrink-0">
+                    <button onClick={() => exportStudentList(students, hostels)} title="Export PDF" className="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+                        <Download size={16} />
+                    </button>
+                    <button onClick={onAdd} className="bg-[#991B1B] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-red-800 transition-colors shadow-sm">
+                        <Plus size={18} /> <span className="hidden sm:inline">Add Student</span>
+                    </button>
+                </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -948,7 +974,7 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
                 </div>
 
                 {/* Desktop Table View */}
-                < div className="hidden md:block overflow-x-auto" >
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left text-sm text-gray-600">
                         <thead className="bg-gray-50 text-gray-900 font-medium">
                             <tr>
@@ -1002,12 +1028,17 @@ const StudentList = ({ students, hostels, onDelete, onAdd, onEdit }) => {
 };
 
 const HostelManage = ({ hostels, onDelete, onAdd, onEdit }) => (
-    <div className="animate-fade-in">
-        <div className="flex justify-between items-center mb-6">
+    <div>
+        <div className="flex justify-between items-center gap-4 mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Manage Hostels</h2>
-            <button onClick={onAdd} className="bg-[#991B1B] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-red-800 transition-colors">
-                <Plus size={18} /> Add Hostel
-            </button>
+            <div className="flex gap-2 shrink-0">
+                <button onClick={() => exportHostelOccupancy(hostels)} title="Export PDF" className="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+                    <Download size={16} />
+                </button>
+                <button onClick={onAdd} className="bg-[#991B1B] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-red-800 transition-colors">
+                    <Plus size={18} /> <span className="hidden sm:inline">Add Hostel</span>
+                </button>
+            </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {hostels.map(hostel => (
@@ -1069,12 +1100,24 @@ const HostelManage = ({ hostels, onDelete, onAdd, onEdit }) => (
     </div>
 );
 
-const ComplaintList = ({ complaints, setComplaints }) => {
+const ComplaintList = ({ complaints, setComplaints, onClear }) => {
     const [selectedImage, setSelectedImage] = React.useState(null);
 
     return (
-        <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Student Complaints</h2>
+        <div>
+            <div className="flex justify-between items-center gap-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Student Complaints</h2>
+                <div className="flex gap-2 shrink-0">
+                    <button onClick={() => exportComplaintReport(complaints)} title="Export PDF" className="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+                        <Download size={16} />
+                    </button>
+                    {complaints.length > 0 && (
+                        <button onClick={onClear} title="Clear All" className="p-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 hover:scale-110 active:scale-95 transition-all duration-200">
+                            <Trash2 size={14} />
+                        </button>
+                    )}
+                </div>
+            </div>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="p-6 grid gap-6">
                     {complaints.length === 0 ? (
@@ -1145,7 +1188,7 @@ const ComplaintList = ({ complaints, setComplaints }) => {
 };
 
 const FoodMenuManage = ({ menu, setMenu, onSave }) => (
-    <div className="animate-fade-in">
+    <div>
         <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Manage Food Menu</h2>
             <button onClick={onSave} className="bg-[#991B1B] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-800 transition-colors flex items-center gap-2">
@@ -1178,7 +1221,7 @@ const FoodMenuManage = ({ menu, setMenu, onSave }) => (
 );
 
 const NoticeBoardManage = ({ notices, onDelete, onAdd }) => (
-    <div className="animate-fade-in">
+    <div>
         <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Notice Board</h2>
             <button onClick={onAdd} className="bg-[#991B1B] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-red-800 transition-colors">
@@ -1202,12 +1245,24 @@ const NoticeBoardManage = ({ notices, onDelete, onAdd }) => (
     </div>
 );
 
-const LeaveManage = ({ requests, onAction }) => {
+const LeaveManage = ({ requests, onAction, onClear }) => {
     const [previewImage, setPreviewImage] = React.useState(null);
 
     return (
-        <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Manage Leave Requests</h2>
+        <div>
+            <div className="flex justify-between items-center gap-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Manage Leave Requests</h2>
+                {requests.length > 0 && (
+                    <div className="flex gap-2 shrink-0">
+                        <button onClick={() => exportLeaveRequests(requests)} title="Export PDF" className="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+                            <Download size={16} />
+                        </button>
+                        <button onClick={onClear} title="Clear All" className="p-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 hover:scale-110 active:scale-95 transition-all duration-200">
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
+                )}
+            </div>
             {requests.length === 0 ? (
                 <div className="bg-white p-8 rounded-lg shadow-sm text-center text-gray-500">
                     No leave requests found.
@@ -1305,19 +1360,29 @@ const LeaveManage = ({ requests, onAction }) => {
     );
 };
 
-const TransferRequestList = ({ requests, onAction, onViewDetails }) => {
+const TransferRequestList = ({ requests, onAction, onClear, onViewDetails }) => {
     // Separate requests into Allocation (New) and Transfers
     const allocationRequests = requests.filter(r => r.type === 'Allocation');
     const transferRequests = requests.filter(r => r.type !== 'Allocation'); // Legacy or explicit 'Transfer'
 
     return (
-        <div className="animate-fade-in space-y-8">
+        <div className="space-y-8">
+            {/* Section Header with Clear */}
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900">Admissions & Transfers</h2>
+                {requests.length > 0 && (
+                    <button onClick={onClear} title="Clear All" className="p-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 hover:scale-110 active:scale-95 transition-all duration-200">
+                        <Trash2 size={14} />
+                    </button>
+                )}
+            </div>
+
             {/* New Admissions Section */}
             <div>
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <UserPlus size={24} className="text-[#991B1B]" />
                     New Admission Requests
-                </h2>
+                </h3>
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                     <div className="p-4 md:p-6">
                         {allocationRequests.length === 0 ? (
@@ -1475,7 +1540,7 @@ const ApplicantDetailsModal = ({ applicant, onClose }) => {
     if (!applicant) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                 <div className="bg-[#991B1B] px-6 py-4 flex justify-between items-center text-white shrink-0">
                     <h3 className="text-lg font-bold flex items-center gap-2">
