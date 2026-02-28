@@ -14,7 +14,7 @@ const LeaveApplication = () => {
     // Initialize from localStorage or mock data
     const [user, setUser] = useState(() => {
         const saved = localStorage.getItem('userData');
-        return saved ? JSON.parse(saved) : { name: 'Student Name', regNo: 'Reg No' };
+        return saved ? JSON.parse(saved) : { name: 'Student Name', regNo: 'Reg No', email: '' };
     });
 
     const [leaveHistory, setLeaveHistory] = useState(() => {
@@ -42,6 +42,7 @@ const LeaveApplication = () => {
                 reason: reason,
                 studentName: user.name,
                 regNo: user.regNo,
+                studentEmail: user.email || '',
                 attachment: fileData || null,
                 attachmentName: attachedFile ? attachedFile.name : null
             };

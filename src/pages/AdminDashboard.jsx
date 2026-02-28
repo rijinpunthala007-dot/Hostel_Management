@@ -11,6 +11,7 @@ import { exportStudentList, exportComplaintReport, exportLeaveRequests, exportHo
 const EMAILJS_SERVICE_ID = 'service_4x9s21k';
 const EMAILJS_TEMPLATE_ID = 'template_ypv329m';          // Used for new allocation approvals
 const EMAILJS_TRANSFER_TEMPLATE_ID = 'template_khtqepj'; // Used for transfer approvals
+const EMAILJS_LEAVE_TEMPLATE_ID = 'template_elekcmn';    // Used for leave approval/rejection notifications (on food service account)
 const EMAILJS_PUBLIC_KEY = 'ry5btGsLagVYhviZI';
 
 // ─── Food Menu Notification (separate EmailJS account) ─────────────────────
@@ -70,6 +71,35 @@ const sendTransferApprovalEmail = (studentEmail, studentName, fromHostel, toHost
         })
         .catch((err) => {
             console.error('❌ EmailJS transfer error:', err);
+        });
+};
+
+/**
+ * Sends a leave approval/rejection notification email to a student via EmailJS.
+ * Template variables expected: {{to_email}}, {{to_name}}, {{leave_type}}, {{leave_from}}, {{leave_to}}, {{leave_status}}, {{reg_no}}
+ */
+const sendLeaveNotificationEmail = (studentEmail, studentName, leaveType, leaveFrom, leaveTo, leaveStatus, regNo) => {
+    if (!studentEmail || studentEmail === 'N/A') return;
+    emailjs
+        .send(
+            FOOD_EMAILJS_SERVICE_ID,
+            EMAILJS_LEAVE_TEMPLATE_ID,
+            {
+                to_email: studentEmail,
+                to_name: studentName,
+                leave_type: leaveType,
+                leave_from: leaveFrom,
+                leave_to: leaveTo,
+                leave_status: leaveStatus,
+                reg_no: regNo,
+            },
+            FOOD_EMAILJS_PUBLIC_KEY
+        )
+        .then(() => {
+            console.log(`✅ Leave ${leaveStatus.toLowerCase()} email sent to ${studentEmail}`);
+        })
+        .catch((err) => {
+            console.error('❌ EmailJS leave notification error:', err);
         });
 };
 
@@ -306,11 +336,31 @@ const AdminDashboard = () => {
     }, []);
 
     const handleLeaveAction = (id, newStatus) => {
+        const request = leaveRequests.find(req => req.id === id);
         const updatedRequests = leaveRequests.map(req =>
             req.id === id ? { ...req, status: newStatus } : req
         );
         setLeaveRequests(updatedRequests);
         localStorage.setItem('leaveRequests', JSON.stringify(updatedRequests));
+
+        // Send email notification to the student
+        if (request) {
+            // Try to get email from the leave request, or fall back to student list
+            let studentEmail = request.studentEmail || '';
+            if (!studentEmail) {
+                const studentRecord = students.find(s => s.regNo === request.regNo);
+                studentEmail = studentRecord?.email || '';
+            }
+            sendLeaveNotificationEmail(
+                studentEmail,
+                request.studentName,
+                request.type,
+                request.from || request.fromDate,
+                request.to || request.toDate,
+                newStatus,
+                request.regNo
+            );
+        }
     };
 
     // Modal States
